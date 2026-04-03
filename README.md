@@ -18,17 +18,17 @@ Before running the system, ensure you have the following installed:
 
 Step 1: Create and activate virtual env
 
-Open your terminal in the project folder and run: C:\Users\ADMIN\AppData\Local\Programs\Python\Python313\python.exe -m venv venv
+- Open your terminal in the project folder and run: C:\Users\ADMIN\AppData\Local\Programs\Python\Python313\python.exe -m venv venv
 
-Then activate venv: .\venv\Scripts\activate
+- Then activate venv: .\venv\Scripts\activate
 
-Install requirements: pip install -r requirements.txt
+- Install requirements: pip install -r requirements.txt
 
 Step 2: Spin up Database & MQTT Broker
 
-Close all previous docker image: docker compose down -v
+- Close all previous docker image: docker compose down -v
 
-Open your terminal in the project folder and run: docker compose up -d
+- Open your terminal in the project folder and run: docker compose up -d
 
 Step 3: Access Database Management (pgAdmin)
 To view raw data and logs, open your browser and go to:
@@ -47,6 +47,6 @@ How to connect to the Database inside pgAdmin:
 4. Click Save. You can find your tables under: Databases -> farm_database -> Schemas -> public -> Tables.
 
 Step 4: Install Python Dependencies & Launch
-2. Start the Backend (Terminal 1): python mqtt_subscriber.py
-3. Start the Web Dashboard (Terminal 2): streamlit run dashboard.py
-4. For a mock test (Terminal 3): python virtual_esp32.py
+1. Start the Backend (Terminal 1): python mqtt_subscriber.py
+2. Start the Web Dashboard (Terminal 2): streamlit run dashboard.py
+3. For a mock test (Terminal 3): python virtual_esp32.py
