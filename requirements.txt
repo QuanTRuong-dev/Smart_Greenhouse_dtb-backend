@@ -1,0 +1,14 @@
+# Thư viện để làm giao diện Web Dashboard
+streamlit
+
+# Thư viện xử lý dữ liệu dưới dạng bảng
+pandas
+
+# Thư viện kết nối và thao tác với Database PostgreSQL
+psycopg2-binary
+
+# Thư viện giao tiếp qua giao thức MQTT
+paho-mqtt
+
+# Thư viện hỗ trợ vẽ biểu đồ (Streamlit sẽ tự dùng nếu có pandas)
+matplotlib
