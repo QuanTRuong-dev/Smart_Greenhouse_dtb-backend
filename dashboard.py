@@ -182,5 +182,5 @@ with tab_monitor:
 
 # --- TỰ LÀM MỚI ---
 if auto_refresh:
-    time.sleep(10)
+    time.sleep(5)
     st.rerun()
