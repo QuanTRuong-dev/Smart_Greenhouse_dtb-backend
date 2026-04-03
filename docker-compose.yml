@@ -1,0 +1,36 @@
+services:
+
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: farm_postgres_db
+    restart: always
+    environment:
+      - POSTGRES_USER=farm_admin
+      - POSTGRES_PASSWORD=supersecret_pass
+      - POSTGRES_DB=farm_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: farm_pgadmin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@farm.com
+      - PGADMIN_DEFAULT_PASSWORD=adminpass
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+  
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: farm_mqtt_broker
+    restart: always
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
