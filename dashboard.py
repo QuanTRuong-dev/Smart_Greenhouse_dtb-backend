@@ -161,7 +161,7 @@ with tab_monitor:
                     st.metric("💧 Độ ẩm đất", f"{int(row['soil_percent'])} %")
                     st.metric("☀️ Ánh sáng", f"{int(row['light_percent'])} %")
                     
-                    pump_text = "ĐANG BẬT 🟢" if row['pump_status'] == 1 else "ĐANG TẮT 🔴"
+                    pump_text = "ĐANG BẬT 🟢" if row['pump_status'] else "ĐANG TẮT 🔴"
                     st.write(f"**Máy bơm:** {pump_text}")
                     st.write(f"**Đèn LED (PWM):** {int(row['led_pwm'])}")
 
