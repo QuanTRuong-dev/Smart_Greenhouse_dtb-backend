@@ -15,11 +15,22 @@ Before running the system, ensure you have the following installed:
 - virtual_esp32.py: A simulation script to test the system without physical hardware.
 
 🚀 Setup & Installation
-Step 1: Spin up Database & MQTT Broker
 
-Open your terminal in the project folder and run: docker-compose up -d
+Step 1: Create and activate virtual env
 
-Step 2: Access Database Management (pgAdmin)
+Open your terminal in the project folder and run: C:\Users\ADMIN\AppData\Local\Programs\Python\Python313\python.exe -m venv venv
+
+Then activate venv: .\venv\Scripts\activate
+
+Install requirements: pip install -r requirements.txt
+
+Step 2: Spin up Database & MQTT Broker
+
+Close all previous docker image: docker compose down -v
+
+Open your terminal in the project folder and run: docker compose up -d
+
+Step 3: Access Database Management (pgAdmin)
 To view raw data and logs, open your browser and go to:
 - URL: http://localhost:5050
 - Login Email: admin@farm.com
@@ -35,8 +46,7 @@ How to connect to the Database inside pgAdmin:
 - Password: supersecret_pass
 4. Click Save. You can find your tables under: Databases -> farm_database -> Schemas -> public -> Tables.
 
-Step 3: Install Python Dependencies & Launch
-1. Install required libraries: pip install streamlit pandas psycopg2-binary paho-mqtt
+Step 4: Install Python Dependencies & Launch
 2. Start the Backend (Terminal 1): python mqtt_subscriber.py
 3. Start the Web Dashboard (Terminal 2): streamlit run dashboard.py
 4. For a mock test (Terminal 3): python virtual_esp32.py
