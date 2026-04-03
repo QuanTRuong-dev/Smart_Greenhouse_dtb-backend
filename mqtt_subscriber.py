@@ -40,11 +40,12 @@ def save_to_db(data):
             sec_key = f's{i}'
             if sec_key in data:
                 sec = data[sec_key]
+                is_pump_on = bool(sec.get('pump'))
                 cursor.execute("""
                     INSERT INTO telemetry_sections 
                     (packet_id, section_id, soil_percent, light_percent, pump_status, led_pwm) 
                     VALUES (%s, %s, %s, %s, %s, %s);
-                """, (packet_id, i, sec.get('soil'), sec.get('light'), sec.get('pump'), sec.get('led')))
+                """, (packet_id, i, sec.get('soil'), sec.get('light'), is_pump_on, sec.get('led')))
 
         conn.commit()
         cursor.close()
