@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Green House Farm</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* =============================================
+   CSS VARIABLES & RESET
+   ============================================= */
+:root {
+  --g9: #052e16; --g8: #14532d; --g7: #166534;
+  --g6: #16a34a; --g5: #22c55e; --g4: #4ade80;
+  --g1: #dcfce7; --g0: #f0fdf4;
+  --o5: #f97316; --o1: #ffedd5; --o0: #fff7ed;
+  --b5: #3b82f6; --b1: #dbeafe; --b0: #eff6ff;
+  --r5: #ef4444; --r1: #fee2e2;
+  --y5: #eab308; --y1: #fef9c3;
+  --c5: #06b6d4; --c1: #cffafe;
+  --gray900:#111827; --gray700:#374151; --gray600:#4b5563;
+  --gray500:#6b7280; --gray400:#9ca3af; --gray300:#d1d5db;
+  --gray200:#e5e7eb; --gray100:#f3f4f6; --gray50:#f9fafb;
+  --white:#ffffff;
+  --r-sm:8px; --r-md:14px; --r-lg:20px; --r-xl:28px;
+  --sh-sm:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
+  --sh-lg:0 12px 40px rgba(0,0,0,.12),0 4px 12px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--gray100);color:var(--gray900);min-height:100vh;font-size:14px}
+
+/* =============================================
+   HEADER
+   ============================================= */
+.hdr{
+  background:linear-gradient(135deg,var(--g9) 0%,var(--g7) 60%,#1a7a3c 100%);
+  height:68px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 24px rgba(0,0,0,.28);
+}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{
+  width:44px;height:44px;border-radius:12px;
+  background:rgba(255,255,255,.13);border:1.5px solid rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  backdrop-filter:blur(6px);
+}
+.hdr-name h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.hdr-name p{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.hdr-pills{display:flex;gap:10px;align-items:center}
+.pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);
+  border-radius:50px;padding:6px 14px;font-size:13px;font-weight:500;color:#fff;
+  backdrop-filter:blur(4px);
+}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:var(--g4);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+#api-status-pill.error{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.4)}
+#api-status-pill.error .pill-dot{background:var(--r5)}
+
+/* =============================================
+   NAV
+   ============================================= */
+.nav{
+  background:var(--white);border-bottom:1px solid var(--gray200);
+  display:flex;justify-content:center;gap:2px;padding:8px 16px;
+  position:sticky;top:68px;z-index:190;box-shadow:var(--sh-sm);
+}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;padding:9px 20px;
+  border-radius:50px;border:none;background:transparent;
+  color:var(--gray500);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;
+  cursor:pointer;transition:all .18s ease;white-space:nowrap;
+}
+.nav-btn:hover{background:var(--gray100);color:var(--gray700)}
+.nav-btn.active{
+  background:var(--g6);color:#fff;
+  box-shadow:0 4px 14px rgba(22,163,74,.35);
+}
+.nav-icon{font-size:16px}
+
+/* =============================================
+   PAGES
+   ============================================= */
+.page{display:none;animation:fadeIn .22s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:1440px;margin:0 auto;padding:26px 24px}
+
+/* =============================================
+   CARDS
+   ============================================= */
+.card{
+  background:var(--white);border-radius:var(--r-md);
+  border:1px solid var(--gray200);box-shadow:var(--sh-sm);
+}
+.card-body{padding:22px}
+.card-title{
+  font-size:14px;font-weight:600;color:var(--gray700);
+  margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
+}
+.card-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px}
+
+/* =============================================
+   GRID HELPERS
+   ============================================= */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.mb{margin-bottom:18px}
+
+/* =============================================
+   METRIC CARD
+   ============================================= */
+.metric{
+  background:var(--white);border-radius:var(--r-md);padding:22px;
+  border:1px solid var(--gray200);box-shadow:var(--sh-sm);
+  display:flex;align-items:flex-start;justify-content:space-between;
+  transition:transform .18s,box-shadow .18s;
+}
+.metric:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.metric-label{font-size:12.5px;color:var(--gray500);margin-bottom:7px;font-weight:500}
+.metric-val{font-size:30px;font-weight:800;letter-spacing:-1px}
+.metric-sub{font-size:12px;color:var(--g6);margin-top:6px;font-weight:500}
+
+/* =============================================
+   DASHBOARD LAYOUT
+   ============================================= */
+.dash-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.dash-col>*+*{margin-top:18px}
+
+/* =============================================
+   SECTION STATUS CARD
+   ============================================= */
+.sec-card{
+  background:var(--white);border-radius:var(--r-md);padding:18px;
+  border:1.5px solid var(--g1);box-shadow:var(--sh-sm);
+}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-size:14.5px;font-weight:700;color:var(--g7)}
+.pump-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:50px;font-size:11px;font-weight:600;
+}
+.pump-on{background:var(--g1);color:var(--g7)}
+.pump-off{background:var(--r1);color:var(--r5)}
+.sec-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.sec-lbl{font-size:12px;color:var(--gray500)}
+.sec-val{font-size:13px;font-weight:600}
+.bar-bg{height:5px;background:var(--gray200);border-radius:3px;margin-bottom:12px}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* =============================================
+   ALERTS PANEL
+   ============================================= */
+.alerts-panel{background:var(--white);border-radius:var(--r-md);border:1px solid var(--gray200);box-shadow:var(--sh-sm)}
+.alerts-hdr{padding:16px 20px;border-bottom:1px solid var(--gray100);font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
+.alert-item{padding:13px 18px;border-bottom:1px solid var(--gray50);cursor:default}
+.alert-item:last-child{border-bottom:none}
+.alert-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.abadge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:.4px}
+.ab-moisture{background:var(--y1);color:#92400e}
+.ab-temp{background:var(--o1);color:#9a3412}
+.ab-water{background:var(--r1);color:var(--r5)}
+.ab-status{background:var(--g1);color:var(--g7)}
+.alert-title-text{font-size:12.5px;font-weight:600;margin:3px 0 2px}
+.alert-msg{font-size:11.5px;color:var(--gray500);line-height:1.45}
+.alert-foot{display:flex;justify-content:space-between;margin-top:7px;font-size:11px}
+.alert-field{color:var(--g6);font-weight:600}
+.alert-time{color:var(--gray400)}
+.alert-action-btn{
+  width:100%;margin-top:8px;padding:6px 0;border:1.5px solid var(--g4);
+  background:var(--g0);color:var(--g7);border-radius:var(--r-sm);
+  font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.alert-action-btn:hover{background:var(--g6);color:#fff;border-color:var(--g6)}
+
+/* =============================================
+   CHART WRAPPER
+   ============================================= */
+.chart-wrap{position:relative;width:100%}
+.chart-h180{height:180px}
+.chart-h220{height:220px}
+.chart-h200{height:200px}
+
+/* =============================================
+   MONITORING PAGE
+   ============================================= */
+.mon-hero{
+  background:var(--white);border-radius:var(--r-xl);border:1px solid var(--gray200);
+  box-shadow:var(--sh-sm);padding:48px 24px;text-align:center;margin-bottom:20px;
+}
+.mon-hero h2{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.mon-hero p{color:var(--gray500);margin-top:6px;font-size:14px}
+.mon-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:640px;margin:28px auto 0}
+.mon-card{
+  background:var(--white);border:1.5px solid var(--gray200);border-radius:var(--r-md);
+  padding:26px 22px;cursor:pointer;transition:all .2s;text-align:left;
+}
+.mon-card:hover{box-shadow:var(--sh-md);transform:translateY(-2px);border-color:var(--g4)}
+.mon-card-icon{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px}
+.mc-label{font-size:16px;font-weight:700}
+.mc-value{font-size:28px;font-weight:800;margin:5px 0}
+.mc-sub{font-size:12px;color:var(--gray500)}
+.mc-cta{font-size:12.5px;color:var(--g6);font-weight:600;margin-top:12px}
+.status-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--g0);border:1px solid var(--g1);border-radius:50px;
+  padding:8px 18px;color:var(--g7);font-size:13px;font-weight:600;margin-top:22px;
+}
+
+/* =============================================
+   FIELD CONTROL PAGE
+   ============================================= */
+.ctrl-tabs{display:flex;gap:8px;margin-bottom:22px}
+.ctab{
+  display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:50px;
+  border:1.5px solid var(--gray300);background:var(--white);
+  font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;
+  color:var(--gray600);cursor:pointer;transition:all .18s;
+}
+.ctab:hover{border-color:var(--g5)}
+.ctab.active-h{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.ctab.active-t{background:linear-gradient(135deg,#f97316,#dc2626);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(249,115,22,.35)}
+
+.ctrl-layout{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start}
+.ctrl-side>*+*{margin-top:12px}
+.ctrl-panel{background:var(--white);border-radius:var(--r-md);padding:18px;border:1px solid var(--gray200);box-shadow:var(--sh-sm)}
+.cp-label{font-size:11.5px;color:var(--gray500);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+.field-sel{
+  border:2px solid var(--g5);border-radius:var(--r-sm);padding:12px 14px;
+  cursor:pointer;background:var(--g0);transition:all .15s;
+}
+.field-sel:hover{background:var(--g1)}
+.field-sel-row{display:flex;align-items:center;justify-content:space-between}
+.field-sel-name{font-size:18px;font-weight:800;color:var(--g7)}
+.field-sel-hint{font-size:10.5px;color:var(--gray400);margin-top:3px}
+
+.tog-wrap{display:flex;flex-direction:column;gap:6px}
+.tog-btn{
+  padding:11px;border-radius:var(--r-sm);border:1.5px solid var(--gray200);
+  background:var(--white);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.tog-btn:hover{border-color:var(--g4)}
+.tog-btn.act{background:var(--g6);border-color:var(--g6);color:#fff;box-shadow:0 4px 12px rgba(22,163,74,.3)}
+.tog-btn.act-red{background:var(--r5);border-color:var(--r5);color:#fff}
+
+.water-stat{
+  background:var(--b0);border:1.5px solid var(--b1);border-radius:var(--r-sm);
+  padding:14px;text-align:center;
+}
+.water-val{font-size:26px;font-weight:800;color:var(--b5)}
+.water-lbl{font-size:12px;color:var(--gray500);margin-bottom:3px}
+
+/* SLIDERS */
+.flow-wrap{background:var(--white);border-radius:var(--r-md);padding:18px;border:1px solid var(--gray200)}
+.flow-label-wrap{text-align:center;margin-bottom:14px}
+.flow-sub{font-size:12.5px;color:var(--gray500)}
+.flow-val{font-size:22px;font-weight:800;margin:4px 0}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);border:2px solid var(--b5);cursor:pointer}
+input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
+.range-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--gray400);margin-top:5px}
+
+/* PUMP DIRECT CONTROL */
+.pump-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.pump-card{background:var(--white);border-radius:var(--r-md);padding:18px;border:1px solid var(--gray200);box-shadow:var(--sh-sm)}
+.pump-card-title{font-size:14px;font-weight:700;color:var(--g7);text-align:center;margin-bottom:14px}
+.pump-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.pbtn{
+  padding:9px 4px;border-radius:var(--r-sm);border:1.5px solid;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;
+}
+.pbtn-on{border-color:var(--g4);background:var(--g0);color:var(--g7)}
+.pbtn-on:hover{background:var(--g6);color:#fff;border-color:var(--g6)}
+.pbtn-off{border-color:var(--r5);background:var(--r1);color:var(--r5)}
+.pbtn-off:hover{background:var(--r5);color:#fff}
+.led-lbl{font-size:11.5px;color:var(--gray500);margin-bottom:5px;font-weight:500}
+.led-upd{
+  width:100%;margin-top:9px;padding:9px;border-radius:var(--r-sm);border:none;
+  background:var(--g6);color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s;
+}
+.led-upd:hover{background:var(--g7)}
+
+/* THRESHOLDS TABLE */
+.thresh-table{width:100%;border-collapse:collapse;font-size:13px}
+.thresh-table th{text-align:left;padding:10px 12px;background:var(--gray50);color:var(--gray500);font-weight:600;border-bottom:1px solid var(--gray200)}
+.thresh-table td{padding:10px 12px;border-bottom:1px solid var(--gray100)}
+.thresh-table td input{
+  width:70px;padding:5px 8px;border:1.5px solid var(--gray300);border-radius:6px;
+  font-family:'DM Sans',sans-serif;font-size:13px;text-align:center;
+}
+.thresh-table td input:focus{outline:none;border-color:var(--g5)}
+.save-thresh-btn{
+  padding:8px 20px;border:none;background:var(--g6);color:#fff;border-radius:var(--r-sm);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  margin-top:14px;transition:background .15s;
+}
+.save-thresh-btn:hover{background:var(--g7)}
+
+/* =============================================
+   DEVICE MANAGEMENT
+   ============================================= */
+.dev-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.dev-stat{
+  background:var(--white);border-radius:var(--r-md);padding:18px 20px;
+  border:1px solid var(--gray200);box-shadow:var(--sh-sm);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dev-stat-val{font-size:28px;font-weight:800}
+.dev-stat-lbl{font-size:12px;color:var(--gray500);margin-top:2px}
+.dev-stat-icon{font-size:26px}
+
+.filter-tabs{display:flex;gap:6px;margin-bottom:16px}
+.ftab{padding:7px 16px;border-radius:50px;border:1.5px solid var(--gray200);background:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.ftab:hover{border-color:var(--g5)}
+.ftab.active{background:var(--g6);border-color:var(--g6);color:#fff}
+
+.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.dev-card{
+  background:var(--white);border-radius:var(--r-md);padding:18px;
+  border:1.5px solid var(--gray200);box-shadow:var(--sh-sm);transition:all .18s;
+}
+.dev-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.dev-card.warn{border-color:#fde68a}
+.dev-card.offl{opacity:.7}
+.dev-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.dev-icon{width:38px;height:38px;border-radius:8px;background:var(--g0);display:flex;align-items:center;justify-content:center;font-size:18px}
+.dev-name{font-size:13.5px;font-weight:700;color:var(--gray900)}
+.dev-id{font-size:10.5px;color:var(--gray400);font-family:'DM Mono',monospace;margin-top:1px}
+.dev-status-icon{font-size:17px}
+.dev-field-badge{display:inline-block;background:var(--g0);color:var(--g7);font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;margin-bottom:10px}
+.dev-metrics{display:flex;gap:14px;margin-bottom:8px}
+.dev-m{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
+.dev-m .i{font-size:15px}
+.dev-m .v{font-weight:600}
+.dev-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--gray400)}
+
+/* =============================================
+   LOADING & TOAST & MISC
+   ============================================= */
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--gray400)}
+.spinner{width:18px;height:18px;border:2px solid var(--gray200);border-top-color:var(--g6);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast-container{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--gray900);color:#fff;padding:11px 16px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;
+  box-shadow:var(--sh-lg);max-width:320px;
+  animation:toastIn .28s ease;
+}
+.toast.ok{background:var(--g7)}
+.toast.err{background:var(--r5)}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(120%);opacity:0}}
+
+.divider{border:none;border-top:1px solid var(--gray100);margin:16px 0}
+.sec-heading{font-size:15px;font-weight:700;color:var(--gray700);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.empty{padding:30px;text-align:center;color:var(--gray400);font-size:13px}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media(max-width:1100px){
+  .dash-layout{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .dev-grid{grid-template-columns:1fr 1fr}
+  .pump-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .hdr{padding:0 16px}
+  .wrap{padding:14px 12px}
+  .g2,.g3,.dev-grid,.pump-grid,.ctrl-layout,.mon-cards{grid-template-columns:1fr}
+  .g4,.dev-stat-row{grid-template-columns:1fr 1fr}
+  .nav-btn .nav-lbl{display:none}
+  .dash-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">🌿</div>
+    <div class="hdr-name">
+      <h1>Smart Green House Farm</h1>
+      <p>Intelligent Agriculture Management System</p>
+    </div>
+  </div>
+  <div class="hdr-pills">
+    <div class="pill">☀️ <span id="hdr-temp">--°C</span></div>
+    <div class="pill">💧 <span id="hdr-humid">--%</span></div>
+    <div class="pill" id="api-status-pill">
+      <div class="pill-dot" id="api-dot"></div>
+      <span id="api-status-txt">Connecting...</span>
+    </div>
+    <div class="pill" id="hdr-clock">--:-- --</div>
+  </div>
+</header>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="nav('dashboard',this)">
+    <span class="nav-icon">📊</span><span class="nav-lbl">Dashboard</span>
+  </button>
+  <button class="nav-btn" onclick="nav('monitoring',this)">
+    <span class="nav-icon">📡</span><span class="nav-lbl">Monitoring</span>
+  </button>
+  <button class="nav-btn" onclick="nav('fieldcontrol',this)">
+    <span class="nav-icon">🎛️</span><span class="nav-lbl">Field Control</span>
+  </button>
+  <button class="nav-btn" onclick="nav('devices',this)">
+    <span class="nav-icon">⚙️</span><span class="nav-lbl">Device Management</span>
+  </button>
+</nav>
+
+<!-- ================================================================
+     PAGE: DASHBOARD
+     ================================================================ -->
+<div id="pg-dashboard" class="page active">
+<div class="wrap">
+  <div class="dash-layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="dash-col">
+
+      <!-- METRICS ROW -->
+      <div class="g3">
+        <div class="metric">
+          <div>
+            <div class="metric-label">Temperature</div>
+            <div class="metric-val" id="d-temp" style="color:var(--o5)">--°C</div>
+            <div class="metric-sub" id="d-temp-sub">Loading...</div>
+          </div>
+          <div class="card-icon" style="background:var(--o1)">☀️</div>
+        </div>
+        <div class="metric">
+          <div>
+            <div class="metric-label">Humidity</div>
+            <div class="metric-val" id="d-humid" style="color:var(--b5)">--%</div>
+            <div class="metric-sub" id="d-humid-sub">Loading...</div>
+          </div>
+          <div class="card-icon" style="background:var(--b1)">💧</div>
+        </div>
+        <div class="metric">
+          <div>
+            <div class="metric-label">Water Tank</div>
+            <div class="metric-val" id="d-water" style="color:var(--c5)">-- cm</div>
+            <div class="metric-sub" id="d-water-sub">Loading...</div>
+          </div>
+          <div class="card-icon" style="background:var(--c1)">🌊</div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="g2">
+        <div class="card"><div class="card-body">
+          <div class="card-title">Temperature Monitoring (24h) <span>🌡️</span></div>
+          <div class="chart-wrap chart-h180"><canvas id="ch-temp"></canvas></div>
+        </div></div>
+        <div class="card"><div class="card-body">
+          <div class="card-title">Humidity Levels (24h) <span>💧</span></div>
+          <div class="chart-wrap chart-h180"><canvas id="ch-humid"></canvas></div>
+        </div></div>
+      </div>
+
+      <!-- SOIL & HEALTH -->
+      <div class="g2">
+        <div class="card"><div class="card-body">
+          <div class="card-title">Soil Moisture by Field (7 days) <span>🌱</span></div>
+          <div class="chart-wrap chart-h200"><canvas id="ch-soil"></canvas></div>
+        </div></div>
+        <div class="card"><div class="card-body">
+          <div class="card-title">Plant Health Distribution <span>🌿</span></div>
+          <div class="chart-wrap chart-h200"><canvas id="ch-health"></canvas></div>
+        </div></div>
+      </div>
+
+      <!-- WATER HISTORY -->
+      <div class="card"><div class="card-body">
+        <div class="card-title">Water Tank History (cm) <span>🌊</span></div>
+        <div class="chart-wrap chart-h180"><canvas id="ch-water"></canvas></div>
+      </div></div>
+
+      <!-- SECTION STATUS -->
+      <div>
+        <div class="sec-heading">🪴 Field Sections — Live Status</div>
+        <div class="g3" id="sec-cards">
+          <div class="loader"><div class="spinner"></div>Loading sections...</div>
+        </div>
+      </div>
+
+    </div><!-- /dash-col -->
+
+    <!-- RIGHT: ALERTS -->
+    <div>
+      <div class="alerts-panel">
+        <div class="alerts-hdr">⚠️ Recent Alerts</div>
+        <div id="alerts-list"><div class="loader"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- CONTROL LOG -->
+      <div class="card" style="margin-top:16px"><div class="card-body">
+        <div class="card-title">Control Log <span>📋</span></div>
+        <div id="log-list"><div class="loader"><div class="spinner"></div></div></div>
+      </div></div>
+    </div>
+
+  </div><!-- /dash-layout -->
+</div></div>
+
+<!-- ================================================================
+     PAGE: MONITORING
+     ================================================================ -->
+<div id="pg-monitoring" class="page">
+<div class="wrap">
+  <div class="mon-hero">
+    <h2>Environmental Monitoring</h2>
+    <p>Real-time sensor data from all sections</p>
+    <div class="mon-cards">
+      <div class="mon-card" onclick="goCtrl('h')">
+        <div class="mon-card-icon" style="background:var(--b1)">💧</div>
+        <div class="mc-label">Humidity Control</div>
+        <div class="mc-value" id="m-humid" style="color:var(--b5)">--%</div>
+        <div class="mc-sub">Current air humidity</div>
+        <div class="mc-cta">Click to control →</div>
+      </div>
+      <div class="mon-card" onclick="goCtrl('t')">
+        <div class="mon-card-icon" style="background:var(--o1)">🌡️</div>
+        <div class="mc-label">Temperature Control</div>
+        <div class="mc-value" id="m-temp" style="color:var(--o5)">--°C</div>
+        <div class="mc-sub">Current temperature</div>
+        <div class="mc-cta">Click to control →</div>
+      </div>
+    </div>
+    <div class="status-pill"><div class="pill-dot"></div> All systems operational</div>
+  </div>
+
+  <div class="card"><div class="card-body">
+    <div class="card-title">Live Sensor Table <span>📊</span></div>
+    <div id="mon-table"><div class="loader"><div class="spinner"></div></div></div>
+  </div></div>
+</div></div>
+
+<!-- ================================================================
+     PAGE: FIELD CONTROL
+     ================================================================ -->
+<div id="pg-fieldcontrol" class="page">
+<div class="wrap">
+
+  <div class="ctrl-tabs">
+    <button class="ctab active-h" id="ctab-h" onclick="setCtab('h')">💧 Humidity Control</button>
+    <button class="ctab" id="ctab-t" onclick="setCtab('t')">🌡️ Temperature Control</button>
+  </div>
+
+  <!-- ---- HUMIDITY / IRRIGATION ---- -->
+  <div id="ctrl-h">
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Irrigation Control</h2>
+    <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Manage water distribution for optimal plant growth</p>
+
+    <div class="ctrl-layout">
+      <div class="ctrl-side">
+
+        <div class="ctrl-panel">
+          <div class="cp-label">Selected Field</div>
+          <div class="field-sel" onclick="cycleField()">
+            <div class="field-sel-row">
+              <span class="field-sel-name" id="sel-field">Field 1</span>
+              <span style="font-size:20px">💧</span>
+            </div>
+            <div class="field-sel-hint">Click to change field</div>
+          </div>
+        </div>
+
+        <div class="ctrl-panel">
+          <div class="cp-label">Irrigation Status</div>
+          <div class="tog-wrap">
+            <button class="tog-btn act" id="tog-active" onclick="setPump(true)">● Active</button>
+            <button class="tog-btn" id="tog-inactive" onclick="setPump(false)">Inactive</button>
+          </div>
+        </div>
+
+        <div class="water-stat">
+          <div class="water-lbl">Water Level</div>
+          <div class="water-val" id="ctrl-water">--%</div>
+        </div>
+
+      </div><!-- /ctrl-side -->
+
+      <div>
+        <div class="card mb"><div class="card-body">
+          <div class="card-title" style="margin-bottom:14px">Water Distribution Flow</div>
+          <div class="chart-wrap chart-h200"><canvas id="ch-flow"></canvas></div>
+        </div></div>
+
+        <div class="flow-wrap">
+          <div class="flow-label-wrap">
+            <div class="flow-sub">Adjust Flow Level</div>
+            <div class="flow-val" id="flow-lbl">Level 6 / 10</div>
+          </div>
+          <input type="range" min="1" max="10" value="6" id="flow-range" oninput="onFlowChange(this.value)">
+          <div class="range-ends"><span>Level 1</span><span>Level 10</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECT SECTION CONTROL -->
+    <div style="margin-top:28px">
+      <div class="sec-heading">🎛️ Direct Section Control — Pump & LED</div>
+      <p style="font-size:12.5px;color:var(--gray400);margin-bottom:14px">Commands sent directly via MQTT → saved to control_logs DB</p>
+      <div class="pump-grid" id="pump-grid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div><!-- /ctrl-h -->
+
+  <!-- ---- TEMPERATURE ---- -->
+  <div id="ctrl-t" style="display:none">
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Temperature Control</h2>
+    <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Manage climate conditions for optimal plant growth</p>
+
+    <div class="ctrl-layout">
+      <div class="ctrl-side">
+
+        <div class="ctrl-panel">
+          <div class="cp-label">Selected Zone</div>
+          <div class="field-sel" style="border-color:var(--o5);background:var(--o0)" onclick="cycleZone()">
+            <div class="field-sel-row">
+              <span class="field-sel-name" id="sel-zone" style="color:var(--o5)">Zone 1</span>
+              <span style="font-size:20px">🌡️</span>
+            </div>
+            <div class="field-sel-hint">Click to change zone</div>
+          </div>
+        </div>
+
+        <div class="ctrl-panel">
+          <div class="cp-label">Climate Mode</div>
+          <div class="tog-wrap">
+            <button class="tog-btn" id="cm-heat" onclick="setClimate('heat')">🔥 Heating</button>
+            <button class="tog-btn" id="cm-cool" onclick="setClimate('cool')">❄️ Cooling</button>
+            <button class="tog-btn act" id="cm-auto" onclick="setClimate('auto')">● Auto</button>
+          </div>
+        </div>
+
+        <div class="water-stat" style="background:var(--o0);border-color:var(--o1)">
+          <div class="water-lbl">Current Temp</div>
+          <div class="water-val" id="ctrl-temp" style="color:var(--o5)">--°C</div>
+        </div>
+
+      </div>
+
+      <div>
+        <div class="card mb"><div class="card-body">
+          <div class="card-title" style="margin-bottom:14px">Temperature Distribution Zones</div>
+          <div class="chart-wrap chart-h200"><canvas id="ch-tempdist"></canvas></div>
+        </div></div>
+
+        <div class="flow-wrap" style="border-color:var(--o1)">
+          <div class="flow-label-wrap">
+            <div class="flow-sub">Target Temperature</div>
+            <div class="flow-val" id="target-temp-lbl">26°C</div>
+          </div>
+          <input type="range" class="orange-range" min="16" max="34" value="26" id="temp-range" oninput="onTempChange(this.value)">
+          <div class="range-ends"><span>16°C Cool</span><span>34°C Hot</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THRESHOLDS EDITOR -->
+    <div class="card" style="margin-top:24px"><div class="card-body">
+      <div class="card-title">⚙️ Auto-Threshold Settings <span style="font-size:12px;color:var(--gray400);font-weight:400">(saved to DB & used by mqtt_subscriber.py)</span></div>
+      <table class="thresh-table" id="thresh-table">
+        <thead><tr>
+          <th>Section</th>
+          <th>Max Temp (°C)</th>
+          <th>Min Soil (%)</th>
+          <th>Min Light (%)</th>
+          <th>Min Water (cm)</th>
+        </tr></thead>
+        <tbody id="thresh-body">
+          <tr><td colspan="5" class="empty">Loading...</td></tr>
+        </tbody>
+      </table>
+      <button class="save-thresh-btn" onclick="saveThresholds()">💾 Save All Thresholds</button>
+    </div></div>
+
+  </div><!-- /ctrl-t -->
+
+</div></div>
+
+<!-- ================================================================
+     PAGE: DEVICES
+     ================================================================ -->
+<div id="pg-devices" class="page">
+<div class="wrap">
+  <div style="margin-bottom:20px">
+    <h2 style="font-size:22px;font-weight:800">Device Management</h2>
+    <p style="color:var(--gray500);font-size:14px">Monitor and control all connected devices</p>
+  </div>
+
+  <div class="dev-stat-row">
+    <div class="dev-stat"><div><div class="dev-stat-val" id="dv-total">8</div><div class="dev-stat-lbl">Total Devices</div></div><div class="dev-stat-icon">⚡</div></div>
+    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--g6)" id="dv-online">6</div><div class="dev-stat-lbl">Online</div></div><div class="dev-stat-icon">📶</div></div>
+    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--y5)" id="dv-warn">1</div><div class="dev-stat-lbl">Warning</div></div><div class="dev-stat-icon">⚠️</div></div>
+    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--r5)" id="dv-off">1</div><div class="dev-stat-lbl">Offline</div></div><div class="dev-stat-icon">📵</div></div>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="ftab active" onclick="filterDev('all',this)">All</button>
+    <button class="ftab" onclick="filterDev('online',this)">Online</button>
+    <button class="ftab" onclick="filterDev('warning',this)">Warning</button>
+    <button class="ftab" onclick="filterDev('offline',this)">Offline</button>
+  </div>
+
+  <div class="dev-grid" id="dev-grid"><!-- filled by JS --></div>
+</div></div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script>
+/* -------------------------------------------------------
+   CONFIG — đổi URL này nếu chạy API ở server khác
+   ------------------------------------------------------- */
+const API = "http://localhost:5000/api";
+
+/* -------------------------------------------------------
+   STATE
+   ------------------------------------------------------- */
+let state = {
+  latest: null,
+  history: [],
+  alerts: [],
+  logs: [],
+  thresholds: [],
+  selectedField: 1,
+  selectedZone: 1,
+  pumpActive: true,
+  climateMode: 'auto',
+  ctab: 'h',
+  apiOk: false
+};
+
+let charts = {};
+
+/* -------------------------------------------------------
+   CLOCK
+   ------------------------------------------------------- */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('hdr-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+}
+setInterval(tickClock,1000); tickClock();
+
+/* -------------------------------------------------------
+   NAVIGATION
+   ------------------------------------------------------- */
+function nav(page, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  btn.classList.add('active');
+}
+
+function goCtrl(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-fieldcontrol').classList.add('active');
+  document.querySelectorAll('.nav-btn')[2].classList.add('active');
+  setCtab(tab);
+}
+
+/* -------------------------------------------------------
+   TOAST
+   ------------------------------------------------------- */
+function toast(msg, type=''){
+  const el = document.createElement('div');
+  el.className=`toast ${type}`;
+  el.textContent=msg;
+  const c = document.getElementById('toasts');
+  c.appendChild(el);
+  setTimeout(()=>{
+    el.style.animation='toastOut .3s ease forwards';
+    setTimeout(()=>el.remove(),300);
+  },3000);
+}
+
+/* -------------------------------------------------------
+   TIME HELPERS
+   ------------------------------------------------------- */
+function timeAgo(iso){
+  const d = Math.floor((Date.now()-new Date(iso))/ 60000);
+  if(d<1) return 'just now';
+  if(d<60) return d+'m ago';
+  return Math.floor(d/60)+'h ago';
+}
+function fmtTime(iso){
+  return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
+/* -------------------------------------------------------
+   API CALLS
+   ------------------------------------------------------- */
+async function apiFetch(path, opt={}){
+  const res = await fetch(API+path, {
+    ...opt,
+    headers:{'Content-Type':'application/json',...(opt.headers||{})},
+    signal: AbortSignal.timeout(5000)
+  });
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function sendCommand(cmd){
+  try {
+    const r = await apiFetch('/command',{method:'POST',body:JSON.stringify({command:cmd})});
+    toast(`✅ ${r.device} → ${r.action}`,'ok');
+    setTimeout(loadLogs,1000);
+  } catch(e) {
+    toast(`❌ Command failed: ${e.message}`,'err');
+  }
+}
+
+/* -------------------------------------------------------
+   DATA LOADERS
+   ------------------------------------------------------- */
+async function loadLatest(){
+  try {
+    const d = await apiFetch('/latest');
+    state.latest = d;
+    renderMetrics(d);
+    renderSections(d.sections||[]);
+    renderMonTable(d, d.sections||[]);
+    updateHeader(d);
+    setApiStatus(true);
+  } catch(e){
+    setApiStatus(false);
+  }
+}
+
+async function loadHistory(){
+  try {
+    const d = await apiFetch('/history?limit=50');
+    state.history = d;
+    buildCharts(d);
+  } catch(e){}
+}
+
+async function loadAlerts(){
+  try {
+    const d = await apiFetch('/alerts?limit=8');
+    state.alerts = d;
+    renderAlerts(d);
+  } catch(e){ renderAlerts([]); }
+}
+
+async function loadLogs(){
+  try {
+    const d = await apiFetch('/logs?limit=10');
+    state.logs = d;
+    renderLogs(d);
+  } catch(e){ renderLogs([]); }
+}
+
+async function loadThresholds(){
+  try {
+    const d = await apiFetch('/thresholds');
+    state.thresholds = d;
+    renderThresholds(d);
+  } catch(e){}
+}
+
+async function saveThresholds(){
+  const rows = document.querySelectorAll('#thresh-body tr');
+  try {
+    for(const row of rows){
+      const sid = parseInt(row.dataset.sid);
+      const inputs = row.querySelectorAll('input');
+      const body = {
+        temp_max: parseFloat(inputs[0].value),
+        soil_min: parseInt(inputs[1].value),
+        light_min: parseInt(inputs[2].value),
+        water_min: parseFloat(inputs[3].value)
+      };
+      await apiFetch(`/thresholds/${sid}`,{method:'PUT',body:JSON.stringify(body)});
+    }
+    toast('✅ Thresholds saved to database','ok');
+  } catch(e){ toast('❌ Save failed: '+e.message,'err'); }
+}
+
+/* -------------------------------------------------------
+   API STATUS
+   ------------------------------------------------------- */
+function setApiStatus(ok){
+  state.apiOk = ok;
+  const pill = document.getElementById('api-status-pill');
+  const txt  = document.getElementById('api-status-txt');
+  const dot  = document.getElementById('api-dot');
+  if(ok){
+    pill.classList.remove('error');
+    txt.textContent='API Connected';
+    dot.style.background='var(--g4)';
+  } else {
+    pill.classList.add('error');
+    txt.textContent='API Offline';
+    dot.style.background='var(--r5)';
+  }
+}
+
+/* -------------------------------------------------------
+   RENDER: HEADER
+   ------------------------------------------------------- */
+function updateHeader(d){
+  document.getElementById('hdr-temp').textContent  = d.air_temp+'°C';
+  document.getElementById('hdr-humid').textContent = d.air_humid+'%';
+  document.getElementById('m-temp').textContent    = d.air_temp+'°C';
+  document.getElementById('m-humid').textContent   = d.air_humid+'%';
+  document.getElementById('ctrl-temp').textContent = d.air_temp+'°C';
+  const wPct = Math.round(Math.min(d.water_level/4*100,100));
+  document.getElementById('ctrl-water').textContent = wPct+'%';
+}
+
+/* -------------------------------------------------------
+   RENDER: METRICS
+   ------------------------------------------------------- */
+function renderMetrics(d){
+  document.getElementById('d-temp').textContent  = d.air_temp+'°C';
+  document.getElementById('d-humid').textContent = d.air_humid+'%';
+  document.getElementById('d-water').textContent = d.water_level+' cm';
+  document.getElementById('d-temp-sub').textContent  = d.air_temp>30?'⚠️ Above threshold':'✅ Normal range';
+  document.getElementById('d-humid-sub').textContent = d.air_humid<50?'⚠️ Low humidity':'✅ Normal range';
+  document.getElementById('d-water-sub').textContent = d.water_level<1?'🚫 Critical low':'✅ Adequate';
+  const upd = new Date(d.created_at);
+  const ts = upd.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+/* -------------------------------------------------------
+   RENDER: SECTIONS
+   ------------------------------------------------------- */
+function renderSections(sections){
+  const el = document.getElementById('sec-cards');
+  if(!sections.length){
+    el.innerHTML='<div class="empty">No section data yet</div>';
+    return;
+  }
+  el.innerHTML = sections.map(s=>{
+    const soilColor = s.soil_percent<40?'var(--r5)':s.soil_percent<60?'var(--y5)':'var(--b5)';
+    const lightColor= s.light_percent<40?'var(--r5)':'var(--y5)';
+    return `
+    <div class="sec-card">
+      <div class="sec-head">
+        <div class="sec-title">🪴 Section ${s.section_id}</div>
+        <span class="pump-badge ${s.pump_status?'pump-on':'pump-off'}">
+          ${s.pump_status?'🟢 Pump ON':'🔴 Pump OFF'}
+        </span>
+      </div>
+      <div class="sec-row"><span class="sec-lbl">💧 Soil Moisture</span><span class="sec-val">${s.soil_percent}%</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${s.soil_percent}%;background:${soilColor}"></div></div>
+      <div class="sec-row"><span class="sec-lbl">☀️ Light</span><span class="sec-val">${s.light_percent}%</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${s.light_percent}%;background:${lightColor}"></div></div>
+      <div class="sec-row"><span class="sec-lbl">💡 LED PWM</span><span class="sec-val">${s.led_pwm}</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(s.led_pwm/255*100)}%;background:var(--y5)"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* -------------------------------------------------------
+   RENDER: ALERTS
+   ------------------------------------------------------- */
+const alertMeta = {
+  MOISTURE_LOW:{ badge:'ab-moisture', icon:'⚠️', label:'Moisture' },
+  TEMP_HIGH:   { badge:'ab-temp',     icon:'⚠️', label:'Temperature' },
+  WATER_LOW:   { badge:'ab-water',    icon:'🚫', label:'System' },
+  STATUS:      { badge:'ab-status',   icon:'✅', label:'Status' },
+};
+
+function renderAlerts(alerts){
+  const el = document.getElementById('alerts-list');
+  if(!alerts.length){ el.innerHTML='<div class="empty">No recent alerts</div>'; return; }
+  el.innerHTML = alerts.map(a=>{
+    const m = alertMeta[a.alert_type]||{badge:'ab-moisture',icon:'ℹ️',label:a.alert_type};
+    return `
+    <div class="alert-item">
+      <div class="alert-top">
+        <span>${m.icon}</span>
+        <span class="abadge ${m.badge}">${m.label}</span>
+      </div>
+      <div class="alert-title-text">${a.alert_type.replace(/_/g,' ')}</div>
+      <div class="alert-msg">${a.message}</div>
+      <div class="alert-foot">
+        <span class="alert-field">${a.field||'System'}</span>
+        <span class="alert-time">${timeAgo(a.created_at)}</span>
+      </div>
+      ${a.action?`<button class="alert-action-btn" onclick="handleAlertAction('${a.action}')">${a.action}</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function handleAlertAction(action){
+  if(action==='Start Irrigation') sendCommand('PUMP_2_ON');
+  else if(action==='Activate Cooling') toast('🌡️ Cooling activated','ok');
+  else toast('Action: '+action,'ok');
+}
+
+/* -------------------------------------------------------
+   RENDER: CONTROL LOG
+   ------------------------------------------------------- */
+function renderLogs(logs){
+  const el = document.getElementById('log-list');
+  if(!logs.length){ el.innerHTML='<div class="empty">No commands yet</div>'; return; }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:var(--gray50)">
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Time</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Device</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Action</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Source</th>
+    </tr></thead>
+    <tbody>${logs.map(l=>`
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:8px 10px;color:var(--gray500)">${fmtTime(l.created_at)}</td>
+        <td style="padding:8px 10px;font-weight:600">${l.device}</td>
+        <td style="padding:8px 10px"><span style="color:${l.action==='BẬT'?'var(--g6)':'var(--r5)'};font-weight:600">${l.action}</span>${l.pwm!=null?' ('+l.pwm+')':''}</td>
+        <td style="padding:8px 10px;color:var(--gray400)">${l.source}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+/* -------------------------------------------------------
+   RENDER: MONITORING TABLE
+   ------------------------------------------------------- */
+function renderMonTable(d, sections){
+  const el = document.getElementById('mon-table');
+  const ok = s => `<span style="color:var(--g6);font-weight:600">✅ Normal</span>`;
+  const warn = s => `<span style="color:var(--r5);font-weight:600">⚠️ ${s}</span>`;
+  el.innerHTML = `
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--gray50)">
+      <th style="text-align:left;padding:10px 14px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Parameter</th>
+      <th style="text-align:left;padding:10px 14px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Value</th>
+      <th style="text-align:left;padding:10px 14px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Status</th>
+    </tr></thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:11px 14px;font-weight:600">🌡️ Air Temperature</td>
+        <td style="padding:11px 14px">${d.air_temp}°C</td>
+        <td style="padding:11px 14px">${d.air_temp>30?warn('High'):ok()}</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:11px 14px;font-weight:600">💧 Air Humidity</td>
+        <td style="padding:11px 14px">${d.air_humid}%</td>
+        <td style="padding:11px 14px">${d.air_humid<50?warn('Low'):ok()}</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:11px 14px;font-weight:600">🌊 Water Level</td>
+        <td style="padding:11px 14px">${d.water_level} cm</td>
+        <td style="padding:11px 14px">${d.water_level<1?warn('Critical'):ok()}</td>
+      </tr>
+      ${sections.map(s=>`
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:11px 14px;font-weight:600">🪴 Section ${s.section_id} — Soil</td>
+        <td style="padding:11px 14px">${s.soil_percent}%</td>
+        <td style="padding:11px 14px">${s.soil_percent<40?warn('Dry'):ok()}</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--gray50)">
+        <td style="padding:11px 14px;font-weight:600">☀️ Section ${s.section_id} — Light</td>
+        <td style="padding:11px 14px">${s.light_percent}%</td>
+        <td style="padding:11px 14px">${s.light_percent<35?warn('Dark'):ok()}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <div style="padding:10px 14px;font-size:11px;color:var(--gray400)">Updated: ${new Date(d.created_at).toLocaleString()}</div>`;
+}
+
+/* -------------------------------------------------------
+   RENDER: THRESHOLDS
+   ------------------------------------------------------- */
+function renderThresholds(data){
+  const el = document.getElementById('thresh-body');
+  if(!data.length){ el.innerHTML='<tr><td colspan="5" class="empty">No thresholds configured</td></tr>'; return; }
+  el.innerHTML = data.map(r=>`
+    <tr data-sid="${r.section_id}">
+      <td style="padding:10px 12px;font-weight:600">Section ${r.section_id}</td>
+      <td style="padding:10px 12px"><input type="number" value="${r.temp_max}" step="0.5" min="15" max="50"></td>
+      <td style="padding:10px 12px"><input type="number" value="${r.soil_min}" step="1" min="0" max="100"></td>
+      <td style="padding:10px 12px"><input type="number" value="${r.light_min}" step="1" min="0" max="100"></td>
+      <td style="padding:10px 12px"><input type="number" value="${r.water_min}" step="0.5" min="0" max="10"></td>
+    </tr>`).join('');
+}
+
+/* -------------------------------------------------------
+   RENDER: DEVICES
+   ------------------------------------------------------- */
+const DEVICE_LIST = [
+  {name:'Temperature Sensor 1',id:'SENS-001',field:'Field 1',icon:'📡',status:'online',battery:87,last:'2 min ago',metrics:[{i:'🌡️',v:'24°C'},{i:'💨',v:'68%'},{i:'💧',v:'75%'}]},
+  {name:'Moisture Sensor 2',   id:'SENS-002',field:'Field 2',icon:'📡',status:'warning',battery:45,last:'5 min ago',metrics:[{i:'🌡️',v:'26°C'},{i:'💨',v:'55%'},{i:'💧',v:'45%'}]},
+  {name:'Security Camera 1',   id:'CAM-001', field:'Field 1',icon:'📷',status:'online', battery:100,last:'1 min ago',metrics:[]},
+  {name:'Irrigation Ctrl 1',   id:'CTRL-001',field:'Field 3',icon:'⚙️',status:'online', battery:78, last:'4 min ago',metrics:[]},
+  {name:'Water Valve 1',       id:'VALVE-001',field:'Field 1',icon:'💧',status:'online', battery:null,last:'3 min ago',metrics:[]},
+  {name:'Climate Sensor 3',    id:'SENS-003',field:'Field 3',icon:'🌬️',status:'online', battery:null,last:'2 min ago',metrics:[]},
+  {name:'LED Controller 2',    id:'LED-002', field:'Field 2',icon:'💡',status:'online', battery:null,last:'3 min ago',metrics:[]},
+  {name:'Soil Sensor B',       id:'SOIL-B',  field:'Field 3',icon:'🌱',status:'offline',battery:12,  last:'2h ago',  metrics:[]},
+];
+
+function filterDev(filter, btn){
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const list = filter==='all' ? DEVICE_LIST : DEVICE_LIST.filter(d=>d.status===filter);
+  const sicon = {online:'✅',warning:'⚠️',offline:'❌'};
+  document.getElementById('dev-grid').innerHTML = list.map(d=>`
+    <div class="dev-card ${d.status==='warning'?'warn':d.status==='offline'?'offl':''}">
+      <div class="dev-hdr">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="dev-icon">${d.icon}</div>
+          <div><div class="dev-name">${d.name}</div><div class="dev-id">${d.id}</div></div>
+        </div>
+        <div class="dev-status-icon">${sicon[d.status]}</div>
+      </div>
+      <div class="dev-field-badge">${d.field}</div>
+      ${d.metrics.length?`<div class="dev-metrics">${d.metrics.map(m=>`<div class="dev-m"><span class="i">${m.i}</span><span class="v">${m.v}</span></div>`).join('')}</div>`:''}
+      <div class="dev-foot">
+        <span>${d.battery!=null?'🔋 '+d.battery+'%':''}</span>
+        <span>🔄 ${d.last}</span>
+      </div>
+    </div>`).join('');
+}
+
+/* -------------------------------------------------------
+   CHARTS
+   ------------------------------------------------------- */
+const CHART_DEFAULTS = {
+  responsive:true,
+  maintainAspectRatio:false,
+  plugins:{legend:{display:true,position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:12,padding:10}}},
+  scales:{
+    x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:10},color:'#9ca3af'}},
+    y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10},color:'#9ca3af'}}
+  },
+  elements:{point:{radius:2.5,hoverRadius:5}}
+};
+
+function buildCharts(history){
+  const labels = history.map(d=>fmtTime(d.created_at));
+  const temps  = history.map(d=>d.air_temp);
+  const humids = history.map(d=>d.air_humid);
+  const water  = history.map(d=>d.water_level);
+
+  const mk = (id, cfg) => {
+    if(charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id), cfg);
+  };
+
+  // Temp
+  mk('ch-temp',{type:'line',data:{labels,datasets:[
+    {label:'Temp (°C)',data:temps,borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.08)',borderWidth:2,tension:.4,fill:true},
+    {label:'Optimal (25°C)',data:Array(temps.length).fill(25),borderColor:'#22c55e',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}
+  ]},options:{...CHART_DEFAULTS}});
+
+  // Humid
+  mk('ch-humid',{type:'line',data:{labels,datasets:[
+    {label:'Humidity (%)',data:humids,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',borderWidth:2,tension:.4,fill:true}
+  ]},options:{...CHART_DEFAULTS}});
+
+  // Water
+  mk('ch-water',{type:'line',data:{labels,datasets:[
+    {label:'Water Level (cm)',data:water,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',borderWidth:2,tension:.4,fill:true}
+  ]},options:{...CHART_DEFAULTS}});
+
+  // Soil (mock 7-day bar)
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  mk('ch-soil',{type:'bar',data:{labels:days,datasets:[
+    {label:'Field 1',data:days.map(()=>60+Math.random()*20),backgroundColor:'#22c55e',borderRadius:4},
+    {label:'Field 2',data:days.map(()=>55+Math.random()*20),backgroundColor:'#6366f1',borderRadius:4},
+    {label:'Field 3',data:days.map(()=>65+Math.random()*15),backgroundColor:'#f59e0b',borderRadius:4}
+  ]},options:{...CHART_DEFAULTS,scales:{x:{grid:{display:false}},y:{max:100,grid:{color:'#f3f4f6'}}}}});
+
+  // Health pie
+  mk('ch-health',{type:'pie',data:{
+    labels:['Healthy 85%','Needs Attention 12%','Critical 3%'],
+    datasets:[{data:[85,12,3],backgroundColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:2,borderColor:'#fff'}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{family:'DM Sans',size:11},boxWidth:12}}}}});
+
+  // Flow (field control)
+  if(document.getElementById('ch-flow')){
+    mk('ch-flow',{type:'bar',data:{
+      labels:['1','2','3','4','5','6','7','8','9','10'],
+      datasets:[{data:[10,20,30,40,50,60,70,80,90,100].map((v,i)=>i<6?v:null),backgroundColor:'#3b82f6',borderRadius:4},
+                {data:[10,20,30,40,50,60,70,80,90,100].map((v,i)=>i>=6?v:null),backgroundColor:'#dbeafe',borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{display:false}}}});
+  }
+
+  // Temp distribution
+  if(document.getElementById('ch-tempdist')){
+    const bins=[16,18,20,22,24,26,28,30,32,34];
+    const cols=bins.map(t=>t<=18?'#93c5fd':t<=22?'#86efac':t<=26?'#4ade80':t===28?'#f87171':'#d1d5db');
+    mk('ch-tempdist',{type:'bar',data:{
+      labels:bins.map(t=>t+'°'),
+      datasets:[{data:bins.map(t=>Math.max(0,10-Math.abs(t-24)*1.2+Math.random()*2)),backgroundColor:cols,borderRadius:4}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{display:false}}}});
+  }
+}
+
+/* -------------------------------------------------------
+   FIELD CONTROL INTERACTIONS
+   ------------------------------------------------------- */
+let selField = 1, selZone = 1;
+
+function cycleField(){
+  selField = (selField%3)+1;
+  document.getElementById('sel-field').textContent = 'Field '+selField;
+}
+
+function cycleZone(){
+  selZone = (selZone%3)+1;
+  document.getElementById('sel-zone').textContent = 'Zone '+selZone;
+}
+
+function setPump(active){
+  const a=document.getElementById('tog-active');
+  const i=document.getElementById('tog-inactive');
+  a.className='tog-btn'+(active?' act':'');
+  i.className='tog-btn'+(active?'':' act');
+  sendCommand(active?`PUMP_${selField}_ON`:`PUMP_${selField}_OFF`);
+}
+
+function setClimate(mode){
+  ['heat','cool','auto'].forEach(m=>{
+    const el=document.getElementById('cm-'+m);
+    if(el) el.className='tog-btn'+(m===mode?' act':'');
+  });
+  toast(`🌡️ Climate mode: ${mode.toUpperCase()}`,'ok');
+}
+
+function setCtab(t){
+  state.ctab=t;
+  document.getElementById('ctrl-h').style.display=t==='h'?'block':'none';
+  document.getElementById('ctrl-t').style.display=t==='t'?'block':'none';
+  document.getElementById('ctab-h').className='ctab'+(t==='h'?' active-h':'');
+  document.getElementById('ctab-t').className='ctab'+(t==='t'?' active-t':'');
+  if(t==='t') loadThresholds();
+}
+
+function onFlowChange(v){
+  document.getElementById('flow-lbl').textContent=`Level ${v} / 10`;
+  const p=(v-1)/9*100;
+  document.getElementById('flow-range').style.background=
+    `linear-gradient(to right,#3b82f6 0%,#3b82f6 ${p}%,#e5e7eb ${p}%,#e5e7eb 100%)`;
+}
+
+function onTempChange(v){
+  document.getElementById('target-temp-lbl').textContent=v+'°C';
+  const p=(v-16)/18*100;
+  document.getElementById('temp-range').style.background=
+    `linear-gradient(to right,#f97316 0%,#f97316 ${p}%,#e5e7eb ${p}%,#e5e7eb 100%)`;
+}
+
+/* PUMP DIRECT CONTROL GRID */
+function buildPumpGrid(){
+  const el = document.getElementById('pump-grid');
+  el.innerHTML = [1,2,3].map(i=>`
+    <div class="pump-card">
+      <div class="pump-card-title">🪴 Section ${i}</div>
+      <div class="pump-btn-row">
+        <button class="pbtn pbtn-on" onclick="sendCommand('PUMP_${i}_ON')">💧 ON</button>
+        <button class="pbtn pbtn-off" onclick="sendCommand('PUMP_${i}_OFF')">⛔ OFF</button>
+      </div>
+      <div class="led-lbl">💡 LED Brightness (0-255)</div>
+      <input type="range" min="0" max="255" value="0" id="led${i}"
+        style="width:100%;margin:5px 0"
+        oninput="document.getElementById('ledval${i}').textContent=this.value">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray400)">
+        <span>Off</span><span id="ledval${i}">0</span><span>Max</span>
+      </div>
+      <button class="led-upd" onclick="sendCommand('LIGHT_${i}_SET_'+document.getElementById('led${i}').value)">
+        ✅ Update LED ${i}
+      </button>
+    </div>`).join('');
+}
+
+/* -------------------------------------------------------
+   MAIN REFRESH LOOP
+   ------------------------------------------------------- */
+async function refreshAll(){
+  await Promise.all([loadLatest(), loadAlerts(), loadLogs()]);
+}
+
+async function init(){
+  buildPumpGrid();
+  filterDev('all', document.querySelector('.ftab'));
+  onFlowChange(6);
+  onTempChange(26);
+  await loadHistory();
+  await refreshAll();
+  setInterval(refreshAll, 10000);   // refresh mỗi 10 giây
+  setInterval(loadHistory, 60000);  // cập nhật chart mỗi 1 phút
+}
+
+init();
+</script>
+</body>
+</html>

@@ -20,7 +20,7 @@ CREATE TABLE telemetry_sections (
     section_id INT NOT NULL,
     soil_percent INT,
     light_percent INT,
-    pump_status BOOLEAN,
+    pump_status INT,
     led_pwm INT
 );
 
