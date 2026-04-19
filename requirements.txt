@@ -12,3 +12,10 @@ paho-mqtt
 
 # Thư viện hỗ trợ vẽ biểu đồ (Streamlit sẽ tự dùng nếu có pandas)
 matplotlib
+
+# Dựng RESTful API hiệu suất cao
+fastapi
+# Môi trường chạy server cho FastAPI
+uvicorn
+# Xác thực dữ liệu đầu vào (tự động cài kèm FastAPI nhưng nên ghi rõ)
+pydantic
