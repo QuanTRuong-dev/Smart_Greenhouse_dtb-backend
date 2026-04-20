@@ -196,7 +196,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray100);color:var(--gray
 }
 .mon-hero h2{font-size:26px;font-weight:800;letter-spacing:-.5px}
 .mon-hero p{color:var(--gray500);margin-top:6px;font-size:14px}
-.mon-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:640px;margin:28px auto 0}
+.mon-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:960px;margin:28px auto 0}
 .mon-card{
   background:var(--white);border:1.5px solid var(--gray200);border-radius:var(--r-md);
   padding:26px 22px;cursor:pointer;transition:all .2s;text-align:left;
@@ -216,6 +216,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray100);color:var(--gray
 /* =============================================
    FIELD CONTROL PAGE
    ============================================= */
+/* --- CUSTOM DROPDOWN --- */
+.custom-dropdown { position: relative; }
+.dropdown-menu {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--white); border: 1px solid var(--gray200);
+  border-radius: var(--r-sm); box-shadow: var(--sh-md); z-index: 200;
+  margin-top: 6px; overflow: hidden;
+}
+.dropdown-menu.show { display: block; animation: fadeIn 0.15s ease; }
+.dropdown-item {
+  padding: 12px 16px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--gray700);
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background 0.15s;
+}
+.dropdown-item:hover { background: var(--gray50); color: var(--g6); }
+.dropdown-item.active { background: var(--g0); color: var(--g7); }
+
+/* --- MANUAL PANEL STATE --- */
+.manual-panel { transition: all 0.3s ease; }
+.manual-panel.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(50%); }
 .ctrl-tabs{display:flex;gap:8px;margin-bottom:22px}
 .ctab{
   display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:50px;
@@ -226,6 +247,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray100);color:var(--gray
 .ctab:hover{border-color:var(--g5)}
 .ctab.active-h{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.35)}
 .ctab.active-t{background:linear-gradient(135deg,#f97316,#dc2626);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(249,115,22,.35)}
+.ctab.active-l{background:linear-gradient(135deg,#eab308,#ca8a04);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(234,179,8,.35)}
+.ctab.active-th{background:linear-gradient(135deg,#E56AB3,#EF87BE);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(234, 8, 193, 0.35)}
 
 .ctrl-layout{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start}
 .ctrl-side>*+*{margin-top:12px}
@@ -418,8 +441,8 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
   <button class="nav-btn" onclick="nav('fieldcontrol',this)">
     <span class="nav-icon">🎛️</span><span class="nav-lbl">Field Control</span>
   </button>
-  <button class="nav-btn" onclick="nav('devices',this)">
-    <span class="nav-icon">⚙️</span><span class="nav-lbl">Device Management</span>
+  <button class="nav-btn" onclick="nav('fields',this)">
+    <span class="nav-icon">🗺️</span><span class="nav-lbl">Fields Overview</span>
   </button>
 </nav>
 
@@ -435,22 +458,22 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
 
       <!-- METRICS ROW -->
       <div class="g3">
-        <div class="metric">
-          <div>
-            <div class="metric-label">Temperature</div>
-            <div class="metric-val" id="d-temp" style="color:var(--o5)">--°C</div>
-            <div class="metric-sub" id="d-temp-sub">Loading...</div>
-          </div>
-          <div class="card-icon" style="background:var(--o1)">☀️</div>
-        </div>
-        <div class="metric">
-          <div>
-            <div class="metric-label">Humidity</div>
-            <div class="metric-val" id="d-humid" style="color:var(--b5)">--%</div>
-            <div class="metric-sub" id="d-humid-sub">Loading...</div>
-          </div>
-          <div class="card-icon" style="background:var(--b1)">💧</div>
-        </div>
+    <div class="metric" onclick="goCtrl('t')" style="cursor:pointer">
+      <div>
+        <div class="metric-label">Air Temperature</div>
+        <div class="metric-val" id="d-temp" style="color:var(--o5)">--°C</div>
+        <div class="metric-sub" id="d-temp-sub">--</div>
+      </div>
+      <div class="card-icon" style="background:var(--o1);color:var(--o5)">🌡️</div>
+    </div>
+    <div class="metric" onclick="goCtrl('h')" style="cursor:pointer">
+      <div>
+        <div class="metric-label">Air Humidity</div>
+        <div class="metric-val" id="d-humid" style="color:var(--b5)">--%</div>
+        <div class="metric-sub" id="d-humid-sub">--</div>
+      </div>
+      <div class="card-icon" style="background:var(--b1);color:var(--b5)">💧</div>
+    </div>
         <div class="metric">
           <div>
             <div class="metric-label">Water Tank</div>
@@ -529,17 +552,31 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
     <div class="mon-cards">
       <div class="mon-card" onclick="goCtrl('h')">
         <div class="mon-card-icon" style="background:var(--b1)">💧</div>
-        <div class="mc-label">Humidity Control</div>
+        <div class="mc-label">Pump Control</div>
         <div class="mc-value" id="m-humid" style="color:var(--b5)">--%</div>
         <div class="mc-sub">Current air humidity</div>
         <div class="mc-cta">Click to control →</div>
       </div>
       <div class="mon-card" onclick="goCtrl('t')">
         <div class="mon-card-icon" style="background:var(--o1)">🌡️</div>
-        <div class="mc-label">Temperature Control</div>
+        <div class="mc-label">Fan Control</div>
         <div class="mc-value" id="m-temp" style="color:var(--o5)">--°C</div>
         <div class="mc-sub">Current temperature</div>
         <div class="mc-cta">Click to control →</div>
+      </div>
+      <div class="mon-card" onclick="goCtrl('l')">
+        <div class="mon-card-icon" style="background:var(--y1)">💡</div>
+        <div class="mc-label">LED Control</div>
+        <div class="mc-value" style="color:var(--y5)">On/Off</div>
+        <div class="mc-sub">Lighting system</div>
+        <div class="mc-cta">Click to control →</div>
+      </div>
+      <div class="mon-card" onclick="goCtrl('th')">
+        <div class="mon-card-icon" style="background:var(--g1)">⚙️</div>
+        <div class="mc-label">Auto Threshold</div>
+        <div class="mc-value" style="color:var(--g5)">Config</div>
+        <div class="mc-sub">Automation rules</div>
+        <div class="mc-cta">Click to configure →</div>
       </div>
     </div>
     <div class="status-pill"><div class="pill-dot"></div> All systems operational</div>
@@ -558,53 +595,66 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
 <div class="wrap">
 
   <div class="ctrl-tabs">
-    <button class="ctab active-h" id="ctab-h" onclick="setCtab('h')">💧 Humidity Control</button>
-    <button class="ctab" id="ctab-t" onclick="setCtab('t')">🌡️ Temperature Control</button>
+    <button class="ctab active-h" id="ctab-h" onclick="setCtab('h')">💧 Pump Control</button>
+    <button class="ctab" id="ctab-t" onclick="setCtab('t')">🌡️ Fan Control</button>
+    <button class="ctab" id="ctab-l" onclick="setCtab('l')">💡 LED Control</button>
+    <button class="ctab" id="ctab-th" onclick="setCtab('th')">⚙️ Threshold</button>
   </div>
 
   <!-- ---- HUMIDITY / IRRIGATION ---- -->
   <div id="ctrl-h">
-    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Irrigation Control</h2>
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Pump Control</h2>
     <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Manage water distribution for optimal plant growth</p>
 
     <div class="ctrl-layout">
       <div class="ctrl-side">
-
-        <div class="ctrl-panel">
+        <div class="ctrl-panel custom-dropdown">
           <div class="cp-label">Selected Field</div>
-          <div class="field-sel" onclick="cycleField()">
+          <div class="field-sel" onclick="toggleDropdown('field-menu')">
             <div class="field-sel-row">
               <span class="field-sel-name" id="sel-field">Field 1</span>
-              <span style="font-size:20px">💧</span>
+              <span style="font-size:14px">▼</span>
             </div>
             <div class="field-sel-hint">Click to change field</div>
           </div>
-        </div>
-
-        <div class="ctrl-panel">
-          <div class="cp-label">Irrigation Status</div>
-          <div class="tog-wrap">
-            <button class="tog-btn act" id="tog-active" onclick="setPump(true)">● Active</button>
-            <button class="tog-btn" id="tog-inactive" onclick="setPump(false)">Inactive</button>
+          <div class="dropdown-menu" id="field-menu">
+            <div class="dropdown-item active" onclick="selectField(1)">Field 1 <span>💧</span></div>
+            <div class="dropdown-item" onclick="selectField(2)">Field 2 <span>💧</span></div>
+            <div class="dropdown-item" onclick="selectField(3)">Field 3 <span>💧</span></div>
           </div>
         </div>
 
-        <div class="water-stat">
-          <div class="water-lbl">Water Level</div>
-          <div class="water-val" id="ctrl-water">--%</div>
+        <div class="ctrl-panel">
+          <div class="cp-label">Operation Mode</div>
+          <div class="tog-wrap" style="flex-direction: row; gap: 8px;">
+            <button class="tog-btn act" id="mode-h-auto" style="flex:1" onclick="setMode('h', 'auto')">🤖 Auto</button>
+            <button class="tog-btn" id="mode-h-manual" style="flex:1" onclick="setMode('h', 'manual')">✋ Manual</button>
+          </div>
         </div>
 
-      </div><!-- /ctrl-side -->
-
-      <div>
+        <div id="manual-panel-h" class="manual-panel disabled">
+          <div class="ctrl-panel" style="margin-top: 12px;">
+            <div class="cp-label">Irrigation Status</div>
+            <div class="tog-wrap">
+              <button class="tog-btn act" id="tog-active" onclick="setPump(true)">PUMP ON</button>
+              <button class="tog-btn" id="tog-inactive" onclick="setPump(false)">PUMP OFF</button>
+            </div>
+          </div>
+          
+          <div class="water-stat" style="margin-top: 12px;">
+            <div class="water-lbl">Tank Water Level</div>
+            <div class="water-val" id="ctrl-water">--%</div>
+          </div>
+        </div>
+      </div><div>
         <div class="card mb"><div class="card-body">
-          <div class="card-title" style="margin-bottom:14px">Water Distribution Flow</div>
+          <div class="card-title" style="margin-bottom:14px">Water Distribution Flow (Real-time) (L/min)</div>
           <div class="chart-wrap chart-h200"><canvas id="ch-flow"></canvas></div>
         </div></div>
 
         <div class="flow-wrap">
           <div class="flow-label-wrap">
-            <div class="flow-sub">Adjust Flow Level</div>
+            <div class="flow-sub">Adjust Manual Flow Level</div>
             <div class="flow-val" id="flow-lbl">Level 6 / 10</div>
           </div>
           <input type="range" min="1" max="10" value="6" id="flow-range" oninput="onFlowChange(this.value)">
@@ -613,60 +663,78 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
       </div>
     </div>
 
-    <!-- DIRECT SECTION CONTROL -->
-    <div style="margin-top:28px">
-      <div class="sec-heading">🎛️ Direct Section Control — Pump & LED</div>
-      <p style="font-size:12.5px;color:var(--gray400);margin-bottom:14px">Commands sent directly via MQTT → saved to control_logs DB</p>
+  </div><!-- /ctrl-h -->
+
+  <!-- ---- LED CONTROL ---- -->
+  <div id="ctrl-l" style="display:none">
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">LED Control</h2>
+    <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Directly control lighting for each section</p>
+    
+    <div class="card"><div class="card-body">
+      <div class="card-title">🎛️ Section Light Management</div>
+      <p style="font-size:12.5px;color:var(--gray400);margin-bottom:18px">Adjust brightness and status for each section independently</p>
       <div class="pump-grid" id="pump-grid">
         <!-- filled by JS -->
       </div>
-    </div>
-  </div><!-- /ctrl-h -->
+    </div></div>
+  </div><!-- /ctrl-l -->
 
   <!-- ---- TEMPERATURE ---- -->
   <div id="ctrl-t" style="display:none">
-    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Temperature Control</h2>
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Fan Control</h2>
     <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Manage climate conditions for optimal plant growth</p>
 
     <div class="ctrl-layout">
       <div class="ctrl-side">
-
-        <div class="ctrl-panel">
+        <div class="ctrl-panel custom-dropdown">
           <div class="cp-label">Selected Zone</div>
-          <div class="field-sel" style="border-color:var(--o5);background:var(--o0)" onclick="cycleZone()">
+          <div class="field-sel" style="border-color:var(--o5);background:var(--o0)" onclick="toggleDropdown('zone-menu')">
             <div class="field-sel-row">
               <span class="field-sel-name" id="sel-zone" style="color:var(--o5)">Zone 1</span>
-              <span style="font-size:20px">🌡️</span>
+              <span style="font-size:14px; color:var(--o5)">▼</span>
             </div>
             <div class="field-sel-hint">Click to change zone</div>
           </div>
-        </div>
-
-        <div class="ctrl-panel">
-          <div class="cp-label">Climate Mode</div>
-          <div class="tog-wrap">
-            <button class="tog-btn" id="cm-heat" onclick="setClimate('heat')">🔥 Heating</button>
-            <button class="tog-btn" id="cm-cool" onclick="setClimate('cool')">❄️ Cooling</button>
-            <button class="tog-btn act" id="cm-auto" onclick="setClimate('auto')">● Auto</button>
+          <div class="dropdown-menu" id="zone-menu">
+            <div class="dropdown-item active" onclick="selectZone(1)">Zone 1 <span>🌡️</span></div>
+            <div class="dropdown-item" onclick="selectZone(2)">Zone 2 <span>🌡️</span></div>
+            <div class="dropdown-item" onclick="selectZone(3)">Zone 3 <span>🌡️</span></div>
           </div>
         </div>
 
-        <div class="water-stat" style="background:var(--o0);border-color:var(--o1)">
-          <div class="water-lbl">Current Temp</div>
-          <div class="water-val" id="ctrl-temp" style="color:var(--o5)">--°C</div>
+        <div class="ctrl-panel">
+          <div class="cp-label">Operation Mode</div>
+          <div class="tog-wrap" style="flex-direction: row; gap: 8px;">
+            <button class="tog-btn act" id="mode-t-auto" style="flex:1" onclick="setMode('t', 'auto')">🤖 Auto</button>
+            <button class="tog-btn" id="mode-t-manual" style="flex:1" onclick="setMode('t', 'manual')">✋ Manual</button>
+          </div>
         </div>
 
+        <div id="manual-panel-t" class="manual-panel disabled">
+          <div class="ctrl-panel" style="margin-top: 12px;">
+            <div class="cp-label">Climate Mode Override</div>
+            <div class="tog-wrap">
+              <button class="tog-btn" id="cm-heat" onclick="setClimate('heat')">Fan On</button>
+              <button class="tog-btn" id="cm-cool" onclick="setClimate('cool')">Fan Off</button>
+            </div>
+          </div>
+
+          <div class="water-stat" style="background:var(--o0);border-color:var(--o1); margin-top: 12px;">
+            <div class="water-lbl">Current Temp</div>
+            <div class="water-val" id="ctrl-temp" style="color:var(--o5)">--°C</div>
+          </div>
+        </div>
       </div>
 
       <div>
         <div class="card mb"><div class="card-body">
-          <div class="card-title" style="margin-bottom:14px">Temperature Distribution Zones</div>
+          <div class="card-title" style="margin-bottom:14px">Live Temperature By Zone (°C)</div>
           <div class="chart-wrap chart-h200"><canvas id="ch-tempdist"></canvas></div>
         </div></div>
 
         <div class="flow-wrap" style="border-color:var(--o1)">
           <div class="flow-label-wrap">
-            <div class="flow-sub">Target Temperature</div>
+            <div class="flow-sub">Target Manual Temperature</div>
             <div class="flow-val" id="target-temp-lbl">26°C</div>
           </div>
           <input type="range" class="orange-range" min="16" max="34" value="26" id="temp-range" oninput="onTempChange(this.value)">
@@ -676,54 +744,103 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
     </div>
 
     <!-- THRESHOLDS EDITOR -->
-    <div class="card" style="margin-top:24px"><div class="card-body">
+    <!-- <div class="card" style="margin-top:24px"><div class="card-body">
       <div class="card-title">⚙️ Auto-Threshold Settings <span style="font-size:12px;color:var(--gray400);font-weight:400">(saved to DB & used by mqtt_subscriber.py)</span></div>
       <table class="thresh-table" id="thresh-table">
         <thead><tr>
           <th>Section</th>
-          <th>Max Temp (°C)</th>
+          <th>Temperature (°C)</th>
           <th>Min Soil (%)</th>
-          <th>Min Light (%)</th>
-          <th>Min Water (cm)</th>
+          <th>Max Soil (%)</th>
+          <th>Light (%)</th>
+          <th>Water (cm)</th>
         </tr></thead>
         <tbody id="thresh-body">
           <tr><td colspan="5" class="empty">Loading...</td></tr>
         </tbody>
       </table>
       <button class="save-thresh-btn" onclick="saveThresholds()">💾 Save All Thresholds</button>
-    </div></div>
+    </div></div> -->
 
-  </div><!-- /ctrl-t -->
+   </div><!--/ctrl-t -->
+
+<div id="ctrl-th" style="display:none">
+
+  <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">
+    Auto-Threshold Settings
+  </h2>
+  <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">
+    Configure automation thresholds
+  </p>
+
+  <!-- COPY NGUYÊN BLOCK THRESHOLD CŨ -->
+  <div class="card"><div class="card-body">
+    <div class="card-title">
+      ⚙️ Auto-Threshold Settings
+    </div>
+
+    <table class="thresh-table">
+      <thead>
+        <tr>
+          <th>Section</th>
+          <th>Temperature (°C)</th>
+          <th>Dry Soil (%)</th>
+          <th>Wet Soil (%)</th>
+          <th>Light (%)</th>
+          <th>Water Tank (cm)</th>
+        </tr>
+      </thead>
+
+      <tbody id="thresh-body">
+        <tr><td colspan="6" class="empty">Loading...</td></tr>
+      </tbody>
+    </table>
+
+    <button class="save-thresh-btn" onclick="saveThresholds()">
+      💾 Save All Thresholds
+    </button>
+  </div></div>
+
+</div>
 
 </div></div>
 
 <!-- ================================================================
-     PAGE: DEVICES
+     PAGE: FIELDS OVERVIEW
      ================================================================ -->
-<div id="pg-devices" class="page">
+<div id="pg-fields" class="page">>
 <div class="wrap">
-  <div style="margin-bottom:20px">
-    <h2 style="font-size:22px;font-weight:800">Device Management</h2>
-    <p style="color:var(--gray500);font-size:14px">Monitor and control all connected devices</p>
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:24px;font-weight:800">Fields Overview</h2>
+    <p style="color:var(--gray500);font-size:14px">Comprehensive summary of all agricultural fields and zones</p>
   </div>
 
-  <div class="dev-stat-row">
-    <div class="dev-stat"><div><div class="dev-stat-val" id="dv-total">8</div><div class="dev-stat-lbl">Total Devices</div></div><div class="dev-stat-icon">⚡</div></div>
-    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--g6)" id="dv-online">6</div><div class="dev-stat-lbl">Online</div></div><div class="dev-stat-icon">📶</div></div>
-    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--y5)" id="dv-warn">1</div><div class="dev-stat-lbl">Warning</div></div><div class="dev-stat-icon">⚠️</div></div>
-    <div class="dev-stat"><div><div class="dev-stat-val" style="color:var(--r5)" id="dv-off">1</div><div class="dev-stat-lbl">Offline</div></div><div class="dev-stat-icon">📵</div></div>
-  </div>
+  <style>
+    .fields-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+    .field-col { background: var(--white); border-radius: var(--r-md); border: 1px solid var(--gray200); box-shadow: var(--sh-sm); overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
+    .field-col:hover { transform: translateY(-4px); border-color: var(--g4); box-shadow: var(--sh-md); }
+    .field-hdr { padding: 20px; background: var(--gray50); border-bottom: 1px solid var(--gray200); display: flex; align-items: center; justify-content: space-between; }
+    .field-name { font-size: 18px; font-weight: 800; color: var(--gray900); }
+    .field-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-active { background: var(--g1); color: var(--g7); }
+    .field-body { padding: 20px; }
+    .field-info-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--gray100); }
+    .field-info-row:last-of-type { border-bottom: none; }
+    .fi-lbl { font-size: 13px; color: var(--gray500); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .fi-val { font-size: 15px; font-weight: 700; color: var(--gray900); }
+    .field-progress-wrap { margin-top: 18px; }
+    .fp-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; font-weight: 600; color: var(--gray600); }
+    .field-action-row { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field-btn { padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid var(--gray200); background: var(--white); color: var(--gray700); }
+    .field-btn:hover { background: var(--gray50); border-color: var(--gray300); }
+    .field-btn.primary { background: var(--g6); color: #fff; border-color: var(--g6); }
+    .field-btn.primary:hover { background: var(--g7); border-color: var(--g7); }
+  </style>
 
-  <div class="filter-tabs">
-    <button class="ftab active" onclick="filterDev('all',this)">All</button>
-    <button class="ftab" onclick="filterDev('online',this)">Online</button>
-    <button class="ftab" onclick="filterDev('warning',this)">Warning</button>
-    <button class="ftab" onclick="filterDev('offline',this)">Offline</button>
+  <div class="fields-grid" id="fields-overview-grid">
+    <div class="loader"><div class="spinner"></div>Loading fields...</div>
   </div>
-
-  <div class="dev-grid" id="dev-grid"><!-- filled by JS --></div>
 </div></div>
-
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toasts"></div>
 
@@ -773,13 +890,16 @@ function nav(page, btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+page).classList.add('active');
   btn.classList.add('active');
+  if(page === 'fields') renderFieldsOverview();
 }
 
 function goCtrl(tab){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-fieldcontrol').classList.add('active');
-  document.querySelectorAll('.nav-btn')[2].classList.add('active');
+  // Cập nhật nút Navigation cho Field Control (giả sử là nút thứ 3)
+  const navBtns = document.querySelectorAll('.nav-btn');
+  if(navBtns[2]) navBtns[2].classList.add('active');
   setCtab(tab);
 }
 
@@ -890,10 +1010,11 @@ async function saveThresholds(){
       const sid = parseInt(row.dataset.sid);
       const inputs = row.querySelectorAll('input');
       const body = {
-        temp_max: parseFloat(inputs[0].value),
-        soil_min: parseInt(inputs[1].value),
-        light_min: parseInt(inputs[2].value),
-        water_min: parseFloat(inputs[3].value)
+          temp_max: parseFloat(inputs[0].value),   // FAN
+          soil_min: parseInt(inputs[1].value),     // PUMP MIN
+          soil_max: parseInt(inputs[2].value),     // PUMP MAX
+          light_min: parseInt(inputs[3].value),    // LED
+          water_min: parseFloat(inputs[4].value)   // PUMP
       };
       await apiFetch(`/thresholds/${sid}`,{method:'PUT',body:JSON.stringify(body)});
     }
@@ -1090,52 +1211,95 @@ function renderMonTable(d, sections){
    ------------------------------------------------------- */
 function renderThresholds(data){
   const el = document.getElementById('thresh-body');
-  if(!data.length){ el.innerHTML='<tr><td colspan="5" class="empty">No thresholds configured</td></tr>'; return; }
+  if(!data.length){
+    el.innerHTML='<tr><td colspan="6" class="empty">No thresholds configured</td></tr>';
+    return;
+  }
+
   el.innerHTML = data.map(r=>`
     <tr data-sid="${r.section_id}">
       <td style="padding:10px 12px;font-weight:600">Section ${r.section_id}</td>
-      <td style="padding:10px 12px"><input type="number" value="${r.temp_max}" step="0.5" min="15" max="50"></td>
-      <td style="padding:10px 12px"><input type="number" value="${r.soil_min}" step="1" min="0" max="100"></td>
-      <td style="padding:10px 12px"><input type="number" value="${r.light_min}" step="1" min="0" max="100"></td>
-      <td style="padding:10px 12px"><input type="number" value="${r.water_min}" step="0.5" min="0" max="10"></td>
-    </tr>`).join('');
+
+      <!-- FAN -->
+      <td style="padding:10px 12px">
+        <input type="number" value="${r.temp_max}" step="0.5" min="15" max="50">
+      </td>
+
+      <!-- PUMP -->
+      <td style="padding:10px 12px">
+        <input type="number" value="${r.soil_min}" step="1" min="0" max="100">
+      </td>
+
+      <td style="padding:10px 12px">
+        <input type="number" value="${r.soil_max ?? 80}" step="1" min="0" max="100">
+      </td>
+
+      <!-- LED -->
+      <td style="padding:10px 12px">
+        <input type="number" value="${r.light_min}" step="1" min="0" max="100">
+      </td>
+
+      <!-- WATER -->
+      <td style="padding:10px 12px">
+        <input type="number" value="${r.water_min}" step="0.5" min="0" max="10">
+      </td>
+    </tr>
+  `).join('');
 }
 
 /* -------------------------------------------------------
-   RENDER: DEVICES
+   RENDER: FIELDS OVERVIEW
    ------------------------------------------------------- */
-const DEVICE_LIST = [
-  {name:'Temperature Sensor 1',id:'SENS-001',field:'Field 1',icon:'📡',status:'online',battery:87,last:'2 min ago',metrics:[{i:'🌡️',v:'24°C'},{i:'💨',v:'68%'},{i:'💧',v:'75%'}]},
-  {name:'Moisture Sensor 2',   id:'SENS-002',field:'Field 2',icon:'📡',status:'warning',battery:45,last:'5 min ago',metrics:[{i:'🌡️',v:'26°C'},{i:'💨',v:'55%'},{i:'💧',v:'45%'}]},
-  {name:'Security Camera 1',   id:'CAM-001', field:'Field 1',icon:'📷',status:'online', battery:100,last:'1 min ago',metrics:[]},
-  {name:'Irrigation Ctrl 1',   id:'CTRL-001',field:'Field 3',icon:'⚙️',status:'online', battery:78, last:'4 min ago',metrics:[]},
-  {name:'Water Valve 1',       id:'VALVE-001',field:'Field 1',icon:'💧',status:'online', battery:null,last:'3 min ago',metrics:[]},
-  {name:'Climate Sensor 3',    id:'SENS-003',field:'Field 3',icon:'🌬️',status:'online', battery:null,last:'2 min ago',metrics:[]},
-  {name:'LED Controller 2',    id:'LED-002', field:'Field 2',icon:'💡',status:'online', battery:null,last:'3 min ago',metrics:[]},
-  {name:'Soil Sensor B',       id:'SOIL-B',  field:'Field 3',icon:'🌱',status:'offline',battery:12,  last:'2h ago',  metrics:[]},
-];
-
-function filterDev(filter, btn){
-  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const list = filter==='all' ? DEVICE_LIST : DEVICE_LIST.filter(d=>d.status===filter);
-  const sicon = {online:'✅',warning:'⚠️',offline:'❌'};
-  document.getElementById('dev-grid').innerHTML = list.map(d=>`
-    <div class="dev-card ${d.status==='warning'?'warn':d.status==='offline'?'offl':''}">
-      <div class="dev-hdr">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="dev-icon">${d.icon}</div>
-          <div><div class="dev-name">${d.name}</div><div class="dev-id">${d.id}</div></div>
+function renderFieldsOverview(){
+  const grid = document.getElementById('fields-overview-grid');
+  if(!state.latest || !state.latest.sections) {
+    grid.innerHTML = '<div class="empty">No field data available</div>';
+    return;
+  }
+  
+  const sections = state.latest.sections;
+  grid.innerHTML = sections.map(s => {
+    const soilColor = s.soil_percent < 40 ? 'var(--r5)' : s.soil_percent < 70 ? 'var(--g5)' : 'var(--b5)';
+    const lightColor = s.light_percent < 35 ? 'var(--o5)' : 'var(--y5)';
+    
+    return `
+    <div class="field-col">
+      <div class="field-hdr">
+        <span class="field-name">Section ${s.section_id}</span>
+        <span class="field-status status-active">Active</span>
+      </div>
+      <div class="field-body">
+        <div class="field-info-row">
+          <span class="fi-lbl">🚿 Pump Status</span>
+          <span class="fi-val" style="color:${s.pump_status ? 'var(--g6)' : 'var(--r5)'}">${s.pump_status ? 'ON' : 'OFF'}</span>
         </div>
-        <div class="dev-status-icon">${sicon[d.status]}</div>
+        <div class="field-info-row">
+          <span class="fi-lbl">💡 LED Power</span>
+          <span class="fi-val">${s.led_pwm} / 255</span>
+        </div>
+        <div class="field-info-row">
+          <span class="fi-lbl">🌡️ Temp</span>
+          <span class="fi-val">${state.latest.air_temp}°C</span>
+        </div>
+        
+        <div class="field-progress-wrap">
+          <div class="fp-head">
+            <span>Soil Moisture</span>
+            <span>${s.soil_percent}%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${s.soil_percent}%; background:${soilColor}"></div></div>
+        </div>
+
+        <div class="field-progress-wrap">
+          <div class="fp-head">
+            <span>Light Intensity</span>
+            <span>${s.light_percent}%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${s.light_percent}%; background:${lightColor}"></div></div>
+        </div>
       </div>
-      <div class="dev-field-badge">${d.field}</div>
-      ${d.metrics.length?`<div class="dev-metrics">${d.metrics.map(m=>`<div class="dev-m"><span class="i">${m.i}</span><span class="v">${m.v}</span></div>`).join('')}</div>`:''}
-      <div class="dev-foot">
-        <span>${d.battery!=null?'🔋 '+d.battery+'%':''}</span>
-        <span>🔄 ${d.last}</span>
-      </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 /* -------------------------------------------------------
@@ -1193,39 +1357,150 @@ function buildCharts(history){
     datasets:[{data:[85,12,3],backgroundColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:2,borderColor:'#fff'}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{family:'DM Sans',size:11},boxWidth:12}}}}});
 
-  // Flow (field control)
+// Flow (field control) - Cải tiến thành dạng Line sóng lượn (Wave Flow)
   if(document.getElementById('ch-flow')){
-    mk('ch-flow',{type:'bar',data:{
-      labels:['1','2','3','4','5','6','7','8','9','10'],
-      datasets:[{data:[10,20,30,40,50,60,70,80,90,100].map((v,i)=>i<6?v:null),backgroundColor:'#3b82f6',borderRadius:4},
-                {data:[10,20,30,40,50,60,70,80,90,100].map((v,i)=>i>=6?v:null),backgroundColor:'#dbeafe',borderRadius:4}]
-    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{display:false}}}});
+    let flowCtx = document.getElementById('ch-flow').getContext('2d');
+    let flowGradient = flowCtx.createLinearGradient(0, 0, 0, 200);
+    flowGradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)'); // Xanh nhạt
+    flowGradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)'); // Trong suốt dần
+
+    mk('ch-flow',{
+      type:'line',
+      data:{
+        labels:['0s','5s','10s','15s','20s','25s','30s'],
+        datasets:[{
+          label:'Flow Rate (L/min)',
+          data:[12, 16, 14, 22, 18, 25, 20], // Dữ liệu giả lập dòng chảy
+          borderColor:'#3b82f6',
+          backgroundColor: flowGradient,
+          borderWidth: 3,
+          tension: 0.4, // Làm cong mượt (sóng nước)
+          fill: true,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#3b82f6',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:'#f3f4f6'}}}
+      }
+    });
   }
 
-  // Temp distribution
+  // Temp distribution - Cải tiến thành dạng Bar màu nhiệt học
   if(document.getElementById('ch-tempdist')){
-    const bins=[16,18,20,22,24,26,28,30,32,34];
-    const cols=bins.map(t=>t<=18?'#93c5fd':t<=22?'#86efac':t<=26?'#4ade80':t===28?'#f87171':'#d1d5db');
-    mk('ch-tempdist',{type:'bar',data:{
-      labels:bins.map(t=>t+'°'),
-      datasets:[{data:bins.map(t=>Math.max(0,10-Math.abs(t-24)*1.2+Math.random()*2)),backgroundColor:cols,borderRadius:4}]
-    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{display:false}}}});
+    mk('ch-tempdist',{
+      type:'bar',
+      data:{
+        labels:['Zone 1', 'Zone 2', 'Zone 3'],
+        datasets:[{
+          label:'Current Temperature (°C)',
+          data:[26.5, 22.0, 31.0], // Dữ liệu giả lập 3 khu vực
+          backgroundColor: [
+            '#4ade80', // Xanh lá (Bình thường)
+            '#3b82f6', // Xanh dương (Lạnh)
+            '#f87171'  // Đỏ (Nóng)
+          ],
+          borderRadius: 8,
+          borderWidth: 0,
+          barThickness: 50 // Cột to rõ ràng
+        }]
+      },
+      plugins: [{
+        id: 'topLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx, data } = chart;
+          ctx.save();
+          chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+            const value = data.datasets[0].data[index];
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 14px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(value + '°C', datapoint.x, datapoint.y - 8);
+          });
+          ctx.restore();
+        }
+      }],
+      options:{
+        responsive:true, maintainAspectRatio:false, 
+        layout: { padding: { top: 25 } },
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{display:false}, ticks:{font:{size:13, weight:'bold'}}}, 
+          y:{beginAtZero:true, max: 40, display: false}
+        }
+      }
+    });
   }
 }
 
 /* -------------------------------------------------------
-   FIELD CONTROL INTERACTIONS
+   FIELD CONTROL INTERACTIONS (UPDATED)
    ------------------------------------------------------- */
 let selField = 1, selZone = 1;
 
-function cycleField(){
-  selField = (selField%3)+1;
-  document.getElementById('sel-field').textContent = 'Field '+selField;
+// Đóng mở dropdown menu
+function toggleDropdown(id) {
+  document.getElementById(id).classList.toggle('show');
 }
 
-function cycleZone(){
-  selZone = (selZone%3)+1;
-  document.getElementById('sel-zone').textContent = 'Zone '+selZone;
+// Click ra ngoài để đóng dropdown
+window.onclick = function(event) {
+  if (!event.target.closest('.custom-dropdown')) {
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+      menu.classList.remove('show');
+    });
+  }
+}
+
+// Xử lý khi chọn Field (Humidity)
+function selectField(id) {
+  selField = id;
+  document.getElementById('sel-field').textContent = 'Field ' + id;
+  
+  // Update class active cho menu
+  const items = document.querySelectorAll('#field-menu .dropdown-item');
+  items.forEach((item, index) => {
+    item.classList.toggle('active', index === id - 1);
+  });
+  
+  document.getElementById('field-menu').classList.remove('show');
+  toast(`💧 Switched to Field ${id}`, 'ok');
+}
+
+// Xử lý khi chọn Zone (Temperature)
+function selectZone(id) {
+  selZone = id;
+  document.getElementById('sel-zone').textContent = 'Zone ' + id;
+  
+  // Update class active cho menu
+  const items = document.querySelectorAll('#zone-menu .dropdown-item');
+  items.forEach((item, index) => {
+    item.classList.toggle('active', index === id - 1);
+  });
+  
+  document.getElementById('zone-menu').classList.remove('show');
+  toast(`🌡️ Switched to Zone ${id}`, 'ok');
+}
+
+// Xử lý chuyển đổi Auto / Manual
+function setMode(tab, mode) {
+  // Đổi UI Nút bấm
+  document.getElementById(`mode-${tab}-auto`).classList.toggle('act', mode === 'auto');
+  document.getElementById(`mode-${tab}-manual`).classList.toggle('act', mode === 'manual');
+  
+  // Làm mờ hoặc hiện khu vực Manual
+  const manualPanel = document.getElementById(`manual-panel-${tab}`);
+  if(mode === 'auto') {
+    manualPanel.classList.add('disabled');
+    toast(`🤖 Switched to Auto Mode. System is now handling controls.`, 'ok');
+  } else {
+    manualPanel.classList.remove('disabled');
+    toast(`✋ Switched to Manual Mode. You have manual control.`, 'ok');
+  }
 }
 
 function setPump(active){
@@ -1244,13 +1519,54 @@ function setClimate(mode){
   toast(`🌡️ Climate mode: ${mode.toUpperCase()}`,'ok');
 }
 
-function setCtab(t){
-  state.ctab=t;
-  document.getElementById('ctrl-h').style.display=t==='h'?'block':'none';
-  document.getElementById('ctrl-t').style.display=t==='t'?'block':'none';
-  document.getElementById('ctab-h').className='ctab'+(t==='h'?' active-h':'');
-  document.getElementById('ctab-t').className='ctab'+(t==='t'?' active-t':'');
-  if(t==='t') loadThresholds();
+// function setCtab(t){
+//   state.ctab=t;
+//   document.getElementById('ctrl-h').style.display=t==='h'?'block':'none';
+//   document.getElementById('ctrl-t').style.display=t==='t'?'block':'none';
+//   document.getElementById('ctrl-l').style.display=t==='l'?'block':'none';
+//   document.getElementById('ctrl-th').style.display=t==='th'?'block':'none';
+//   document.getElementById('ctab-h').className='ctab'+(t==='h'?' active-h':'');
+//   document.getElementById('ctab-t').className='ctab'+(t==='t'?' active-t':'');
+//   document.getElementById('ctab-l').className='ctab'+(t==='l'?' active-l':'');
+//   document.getElementById('ctab-th').className='ctab'+(t==='th'?' active-th':'');
+//   if(t==='th') loadThresholds();
+// }
+
+function setCtab(tab){
+  // lưu state nếu bạn đang dùng
+  state.ctab = tab;
+
+  // 1. Ẩn tất cả content
+  const contents = ['h','t','l','th'];
+  contents.forEach(c=>{
+    const el = document.getElementById('ctrl-' + c);
+    if(el) el.style.display = 'none';
+  });
+
+  // 2. Reset tất cả tab button
+  document.querySelectorAll('.ctab').forEach(btn=>{
+    btn.classList.remove('active-h','active-t','active-l','active-th');
+  });
+
+  // 3. Hiện tab được chọn
+  const activeContent = document.getElementById('ctrl-' + tab);
+  if(activeContent){
+    activeContent.style.display = 'block';
+  }
+
+  // 4. Active button đúng màu
+  const activeBtn = document.getElementById('ctab-' + tab);
+  if(activeBtn){
+    if(tab === 'h') activeBtn.classList.add('active-h');
+    else if(tab === 't') activeBtn.classList.add('active-t');
+    else if(tab === 'l') activeBtn.classList.add('active-l');
+    else activeBtn.classList.add('active-th'); // threshold dùng màu giống pump
+  }
+
+  // 5. Load data riêng cho từng tab
+  if(tab === 'th'){
+    loadThresholds(); // 🔥 QUAN TRỌNG
+  }
 }
 
 function onFlowChange(v){
@@ -1277,8 +1593,8 @@ function buildPumpGrid(){
         <button class="pbtn pbtn-on" onclick="sendCommand('PUMP_${i}_ON')">💧 ON</button>
         <button class="pbtn pbtn-off" onclick="sendCommand('PUMP_${i}_OFF')">⛔ OFF</button>
       </div>
-      <div class="led-lbl">💡 LED Brightness (0-255)</div>
-      <input type="range" min="0" max="255" value="0" id="led${i}"
+      <div class="led-lbl">💡 LED Brightness (0-100)</div>
+      <input type="range" min="0" max="100" value="0" id="led${i}"
         style="width:100%;margin:5px 0"
         oninput="document.getElementById('ledval${i}').textContent=this.value">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray400)">
@@ -1299,14 +1615,140 @@ async function refreshAll(){
 
 async function init(){
   buildPumpGrid();
-  filterDev('all', document.querySelector('.ftab'));
   onFlowChange(6);
   onTempChange(26);
   await loadHistory();
   await refreshAll();
-  setInterval(refreshAll, 10000);   // refresh mỗi 10 giây
+  setInterval(() => {
+    refreshAll().then(() => {
+      if(document.getElementById('pg-fields').classList.contains('active')) {
+        renderFieldsOverview();
+      }
+    });
+  }, 10000);   // refresh mỗi 10 giây
   setInterval(loadHistory, 60000);  // cập nhật chart mỗi 1 phút
 }
+
+/* CHARTS INITIALIZATION */
+function initCharts() {
+  // --- 1. BIỂU ĐỒ LƯU LƯỢNG NƯỚC (Cập nhật đơn vị L/min) ---
+  const flowCtx = document.getElementById('ch-flow').getContext('2d');
+  const gradient = flowCtx.createLinearGradient(0, 0, 0, 200);
+  gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+  gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+  charts.flow = new Chart(flowCtx, {
+    type: 'line',
+    data: {
+      labels: ['0s', '5s', '10s', '15s', '20s', '25s', '30s'],
+      datasets: [{
+        label: 'Lưu lượng',
+        data: [10, 15, 12, 18, 14, 20, 16],
+        borderColor: '#3b82f6',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3
+      }]
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false, 
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.parsed.y + ' L/min'; // Hiện đơn vị khi rê chuột
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return value + ' L/min'; // Hiện đơn vị trên trục Y
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // --- PLUGIN TỰ ĐỊNH NGHĨA: VẼ SỐ TRÊN ĐỈNH CỘT ---
+  const topLabelsPlugin = {
+    id: 'topLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, data } = chart;
+      ctx.save();
+      chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+        const value = data.datasets[0].data[index];
+        ctx.fillStyle = '#111827'; // Màu chữ
+        ctx.font = 'bold 14px "DM Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        // Vẽ chữ (Giá trị + °C) phía trên đỉnh cột 8px
+        ctx.fillText(value + '°C', datapoint.x, datapoint.y - 8);
+      });
+      ctx.restore();
+    }
+  };
+
+  // --- 2. BIỂU ĐỒ NHIỆT ĐỘ VÙNG (Cập nhật hiện số và ẩn trục Y) ---
+  charts.tempdist = new Chart(document.getElementById('ch-tempdist'), {
+    type: 'bar',
+    data: {
+      labels: ['Vùng 1', 'Vùng 2', 'Vùng 3'],
+      datasets: [{
+        data: [26, 22, 31],
+        backgroundColor: ['#4ade80', '#3b82f6', '#f87171'],
+        borderRadius: 8
+      }]
+    },
+    plugins: [topLabelsPlugin], // Kích hoạt plugin hiện số
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false, 
+      layout: {
+        padding: { top: 25 } // Chừa chỗ trống trên đỉnh để không bị mất số
+      },
+      plugins: { legend: { display: false } },
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          max: 40,
+          display: false // Ẩn trục Y vì đã có số trên đầu cột
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 14, weight: 'bold' } }
+        }
+      }
+    }
+  });
+
+  // --- CÁC BIỂU ĐỒ DASHBOARD KHÁC (Giữ nguyên) ---
+  charts.temp = new Chart(document.getElementById('ch-temp'), {
+    type: 'line',
+    data: { labels: ['10:00', '10:05', '10:10'], datasets: [{ data: [28, 29, 28.5], borderColor: '#f97316' }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+  
+  charts.humid = new Chart(document.getElementById('ch-humid'), {
+    type: 'line',
+    data: { labels: ['10:00', '10:05', '10:10'], datasets: [{ data: [65, 68, 66], borderColor: '#3b82f6' }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  charts.water = new Chart(document.getElementById('ch-water'), {
+    type: 'bar',
+    data: { labels: ['Lượng nước'], datasets: [{ data: [80], backgroundColor: '#06b6d4' }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+  });
+}
+
 
 init();
 </script>
