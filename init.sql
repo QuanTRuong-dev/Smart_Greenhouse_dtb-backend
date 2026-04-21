@@ -37,7 +37,9 @@ CREATE TABLE thresholds (
     soil_min INT,
     light_min INT,
     water_min DOUBLE PRECISION,
-    is_auto BOOLEAN DEFAULT true, -- 🔑 Cột mới để khóa/mở chế độ Auto
+    is_auto_pump BOOLEAN DEFAULT true,
+    is_auto_fan BOOLEAN DEFAULT true,
+    is_auto_led BOOLEAN DEFAULT true,
     updated_by VARCHAR(50),
     updated_at TIMESTAMP DEFAULT NOW()
 );
