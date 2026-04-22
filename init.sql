@@ -20,8 +20,9 @@ CREATE TABLE telemetry_sections (
     section_id INT NOT NULL,
     soil_percent INT,
     light_percent INT,
-    pump_status INT,
-    led_pwm INT
+    pump_status BOOLEAN DEFAULT false,
+    led_pwm INT DEFAULT 0,
+    fan_status BOOLEAN DEFAULT false
 );
 
 CREATE INDEX idx_packets_time
@@ -36,6 +37,9 @@ CREATE TABLE thresholds (
     soil_min INT,
     light_min INT,
     water_min DOUBLE PRECISION,
+    is_auto_pump BOOLEAN DEFAULT true,
+    is_auto_fan BOOLEAN DEFAULT true,
+    is_auto_led BOOLEAN DEFAULT true,
     updated_by VARCHAR(50),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -60,8 +64,9 @@ CREATE TABLE alerts (
 INSERT INTO users (username, password, role)
 VALUES ('admin', 'admin123', 'admin');
 
-INSERT INTO thresholds (section_id, temp_max, soil_min, light_min, water_min, updated_by)
-VALUES
-(1, 30.0, 40, 35, 2.0, 'admin'),
-(2, 30.0, 40, 35, 2.0, 'admin'),
-(3, 30.0, 40, 35, 2.0, 'admin');
+-- Khởi tạo ngưỡng mặc định cho 3 khu vực (Mặc định Auto = true)
+INSERT INTO thresholds (section_id, temp_max, soil_min, light_min, water_min, is_auto, updated_by)
+VALUES 
+(1, 30.0, 40, 35, 2.0, true, 'admin'),
+(2, 30.0, 40, 35, 2.0, true, 'admin'),
+(3, 30.0, 40, 35, 2.0, true, 'admin');

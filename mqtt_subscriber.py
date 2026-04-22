@@ -18,9 +18,55 @@ MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 MQTT_TOPIC_SENSORS = "greenframbku/sensors"
 MQTT_TOPIC_CMD = "greenframbku/cmd"
+MQTT_TOPIC_SYNC_REQUEST = "greenframbku/sync_request"   
+MQTT_TOPIC_SYNC_RESPONSE = "greenframbku/sync_response" 
 
 # ==========================================
-# 1. HÀM LƯU DỮ LIỆU
+# HÀM GỬI TRẠNG THÁI ĐỒNG BỘ CHO ESP32
+# ==========================================
+def send_sync_response(client):
+    """
+    Đọc trạng thái từ Database và gửi cho ESP32
+    Format: SYNC|section_id|is_auto_pump|is_auto_light|is_auto_fan|pump_state|led_brightness
+    """
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT section_id, is_auto_pump, is_auto_light, is_auto_fan
+            FROM thresholds ORDER BY section_id
+        """)
+        thresholds = cursor.fetchall()
+        
+        cursor.execute("""
+            SELECT ts.section_id, ts.pump_status, ts.led_pwm, ts.fan_status
+            FROM telemetry_sections ts
+            INNER JOIN (
+                SELECT section_id, MAX(id) as max_id
+                FROM telemetry_sections
+                GROUP BY section_id
+            ) latest ON ts.section_id = latest.section_id AND ts.id = latest.max_id
+        """)
+        device_states = {row[0]: {'pump': row[1], 'led': row[2], 'fan': row[3]} for row in cursor.fetchall()}
+        
+        for sec_id, is_auto_pump, is_auto_light, is_auto_fan in thresholds:
+            st = device_states.get(sec_id, {'pump': False, 'led': 0, 'fan': False})
+
+            
+            sync_msg = f"SYNC|{sec_id}|{int(is_auto_pump)}|{int(is_auto_light)}|{int(is_auto_fan)}|{int(st['pump'])}|{st['led']}|{int(st['fan'])}"  
+            
+            client.publish(MQTT_TOPIC_SYNC_RESPONSE, sync_msg)
+            print(f"📤 [SYNC] Sent: {sync_msg}")
+        cursor.close()
+        conn.close()
+        print(f"✅ [SYNC] Đã gửi đồng bộ cho cả 3 khu vực")
+        
+    except Exception as e:
+        print(f"❌ [SYNC] Lỗi gửi trạng thái: {e}")
+
+# ==========================================
+# 1. HÀM LƯU DỮ LIỆU VÀO DB
 # ==========================================
 def save_to_db(data):
     try:
@@ -40,12 +86,13 @@ def save_to_db(data):
             sec_key = f's{i}'
             if sec_key in data:
                 sec = data[sec_key]
-                #is_pump_on = bool(sec.get('pump'))
+                # Đã update các Key này cho trùng với snapshot payload của ESP32 hiện tại
+                is_pump_on = bool(sec.get('pump_status'))
                 cursor.execute("""
                     INSERT INTO telemetry_sections 
-                    (packet_id, section_id, soil_percent, light_percent, pump_status, led_pwm) 
-                    VALUES (%s, %s, %s, %s, %s, %s);
-                """, (packet_id, i, sec.get('soil'), sec.get('light'), sec.get('pump'), sec.get('led')))
+                    (packet_id, section_id, soil_percent, light_percent, pump_status, led_pwm, fan_status) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                """, (packet_id, i, sec.get('soil'), sec.get('light'), bool(sec.get('pump_status')), sec.get('led_brightness'), bool(sec.get('fan_status'))))
 
         conn.commit()
         cursor.close()
@@ -56,87 +103,27 @@ def save_to_db(data):
         print(f"Lỗi Lưu DB: {e}")
 
 # ==========================================
-# 2. HÀM TỰ ĐỘNG HÓA (THRESHOLD CHECK)
-# ==========================================
-def check_and_control(client, data):
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        
-        # Kéo ngưỡng cấu hình từ Database lên
-        cursor.execute("SELECT section_id, soil_min, light_min, water_min, temp_max FROM thresholds;")
-        thresholds = {row[0]: {'soil_min': row[1], 'light_min': row[2], 'water_min': row[3], 'temp_max': row[4]} for row in cursor.fetchall()}
-        
-        water_lvl = data.get('water_lvl', 0)
-        air_temp = data.get('air', {}).get('t', 0)
-        
-        # Cảnh báo Nhiệt độ cao (Lấy temp_max từ section 1 làm chuẩn chung)
-        if 1 in thresholds and air_temp > thresholds[1]['temp_max']:
-            cursor.execute("INSERT INTO alerts (alert_type, message) VALUES (%s, %s)", 
-                           ("TEMP_HIGH", f"CẢNH BÁO NÓNG: Nhiệt độ hiện tại ({air_temp}°C) vượt ngưỡng an toàn!"))
-            print(f"🔥 AUTO: Đã ghi nhận cảnh báo Nhiệt độ cao ({air_temp}°C)")
-        
-        for i in range(1, 4):
-            sec_key = f's{i}'
-            if sec_key in data and i in thresholds:
-                sec = data[sec_key]
-                thresh = thresholds[i]
-                
-                # --- LOGIC MÁY BƠM ---
-                if water_lvl < thresh['water_min']:
-                    # Cạn nước: Ghi cảnh báo, cấm bơm
-                    cursor.execute("INSERT INTO alerts (alert_type, message) VALUES (%s, %s)", 
-                                   ("WATER_LOW", f"Bồn cạn ({water_lvl}cm). Không thể tưới Khu {i}!"))
-                    
-                    if sec.get('pump') == 1: # Nếu bơm đang chạy thì phải ép tắt ngay
-                        client.publish(MQTT_TOPIC_CMD, f"PUMP_{i}_OFF")
-                else:
-                    # Đủ nước: Kiểm tra đất
-                    if sec.get('soil') < thresh['soil_min'] and sec.get('pump') == 0:
-                        client.publish(MQTT_TOPIC_CMD, f"PUMP_{i}_ON")
-                        cursor.execute("INSERT INTO control_logs (username, device, action, source) VALUES (%s, %s, %s, %s)",
-                                       ('system', f'Máy bơm {i}', 'BẬT', 'Auto Threshold'))
-                        print(f"🤖 AUTO: Đã BẬT Bơm {i} (Đất khô: {sec.get('soil')}%)")
-
-                    # Thêm độ trễ để tránh bơm tắt chớp nhoáng (Đất ẩm hơn ngưỡng 15% thì mới dừng)
-                    elif sec.get('soil') >= (thresh['soil_min'] + 15) and sec.get('pump') == 1:
-                        client.publish(MQTT_TOPIC_CMD, f"PUMP_{i}_OFF")
-                        cursor.execute("INSERT INTO control_logs (username, device, action, source) VALUES (%s, %s, %s, %s)",
-                                       ('system', f'Máy bơm {i}', 'TẮT', 'Auto Threshold'))
-                        print(f"🤖 AUTO: Đã TẮT Bơm {i} (Đất đã đủ ẩm: {sec.get('soil')}%)")
-
-                # --- LOGIC ĐÈN LED ---
-                if sec.get('light') < thresh['light_min'] and sec.get('led') == 0:
-                    client.publish(MQTT_TOPIC_CMD, f"LIGHT_{i}_SET_255")
-                    cursor.execute("INSERT INTO control_logs (username, device, action, pwm, source) VALUES (%s, %s, %s, %s, %s)",
-                                   ('system', f'Đèn LED {i}', 'CẬP NHẬT', 255, 'Auto Threshold'))
-                    print(f"🤖 AUTO: Đã BẬT Đèn {i} sáng 100% (Trời tối: {sec.get('light')}%)")
-                    
-                elif sec.get('light') >= (thresh['light_min'] + 20) and sec.get('led') > 0:
-                    client.publish(MQTT_TOPIC_CMD, f"LIGHT_{i}_SET_0")
-                    cursor.execute("INSERT INTO control_logs (username, device, action, pwm, source) VALUES (%s, %s, %s, %s, %s)",
-                                   ('system', f'Đèn LED {i}', 'TẮT', 0, 'Auto Threshold'))
-                    print(f"🤖 AUTO: Đã TẮT Đèn {i} (Trời đã sáng)")
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Lỗi Auto Threshold: {e}")
-
-# ==========================================
-# 3. KẾT NỐI VÀ LẮNG NGHE MQTT
+# 2. KẾT NỐI VÀ LẮNG NGHE MQTT
 # ==========================================
 def on_connect(client, userdata, flags, rc):
     print("✅ Đã kết nối HiveMQ Public Broker!")
     client.subscribe(MQTT_TOPIC_SENSORS)
-    print(f"📡 Đang túc trực trên kênh {MQTT_TOPIC_SENSORS}...")
+    client.subscribe(MQTT_TOPIC_SYNC_REQUEST)  
+    print(f"📡 Đang túc trực trên kênh {MQTT_TOPIC_SENSORS} và {MQTT_TOPIC_SYNC_REQUEST}...")
 
 def on_message(client, userdata, msg):
     try:
-        payload = json.loads(msg.payload.decode("utf-8"))
-        save_to_db(payload)              # Bước 1: Lưu sổ sách
-        check_and_control(client, payload) # Bước 2: Máy tự ra quyết định
+        if msg.topic == MQTT_TOPIC_SYNC_REQUEST:
+            payload = msg.payload.decode("utf-8")
+            print(f"📨 [SYNC] Nhận yêu cầu: {payload}")
+            if payload == "REQUEST_SYNC":
+                send_sync_response(client)
+            return
+        
+        if msg.topic == MQTT_TOPIC_SENSORS:
+            payload = json.loads(msg.payload.decode("utf-8"))
+            save_to_db(payload)              # Chỉ lưu sổ sách
+            
     except Exception as e:
         print(f"Lỗi đọc Data: {e}")
 
@@ -144,5 +131,6 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
+print("🚀 Đang khởi động MQTT Subscriber...")
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_forever()
