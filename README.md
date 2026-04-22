@@ -59,8 +59,8 @@ Step 4: Install Python Dependencies & Launch
 
 1. Start the Backend (Terminal 1): python mqtt_subscriber.py
 2. Start the Web Dashboard (Terminal 2): streamlit run dashboard.py (Optional)
-3.1. For a mock test (Terminal 3): python virtual_esp32.py (Simulate the data sent from the IOT)
-3.2. To connect it to the IOT (Terminal 3), open the "Smart_Green_House" folder, click the "serial monitor" or press "Ctrl+Alt+S" to execute the platformio.ini
+3. For a mock test (Terminal 3): python virtual_esp32.py (Simulate the data sent from the IOT)
+4. To connect it to the IOT (Terminal 3), open the "Smart_Green_House" folder, click the "serial monitor" or press "Ctrl+Alt+S" to execute the platformio.ini
 
 Step 5: Run web and API
 
