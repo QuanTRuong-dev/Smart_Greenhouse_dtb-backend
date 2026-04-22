@@ -50,3 +50,8 @@ Step 4: Install Python Dependencies & Launch
 1. Start the Backend (Terminal 1): python mqtt_subscriber.py
 2. Start the Web Dashboard (Terminal 2): streamlit run dashboard.py
 3. For a mock test (Terminal 3): python virtual_esp32.py
+
+Step 5: Run web and API
+1. Open a new terminal, run the website to port 7000: python -m http.server 7000
+2. Open another terminal, run the api_server on port 8000: uvicorn api_server:app --reload --port 8000
+3. Open: https://localhost:7000 to run the website
