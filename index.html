@@ -422,10 +422,10 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
   <div class="hdr-pills">
     <div class="pill">☀️ <span id="hdr-temp">--°C</span></div>
     <div class="pill">💧 <span id="hdr-humid">--%</span></div>
-    <div class="pill" id="api-status-pill">
+    <!-- <div class="pill" id="api-status-pill">
       <div class="pill-dot" id="api-dot"></div>
       <span id="api-status-txt">Connecting...</span>
-    </div>
+    </div> -->
     <div class="pill" id="hdr-clock">--:-- --</div>
   </div>
 </header>
@@ -651,33 +651,78 @@ input[type=range].orange-range::-webkit-slider-thumb{border-color:var(--o5)}
           <div class="card-title" style="margin-bottom:14px">Water Distribution Flow (Real-time) (L/min)</div>
           <div class="chart-wrap chart-h200"><canvas id="ch-flow"></canvas></div>
         </div></div>
-
-        <div class="flow-wrap">
-          <div class="flow-label-wrap">
-            <div class="flow-sub">Adjust Manual Flow Level</div>
-            <div class="flow-val" id="flow-lbl">Level 6 / 10</div>
-          </div>
-          <input type="range" min="1" max="10" value="6" id="flow-range" oninput="onFlowChange(this.value)">
-          <div class="range-ends"><span>Level 1</span><span>Level 10</span></div>
-        </div>
       </div>
     </div>
 
   </div><!-- /ctrl-h -->
 
   <!-- ---- LED CONTROL ---- -->
-  <div id="ctrl-l" style="display:none">
+  <!-- <div id="ctrl-l" style="display:none">
     <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">LED Control</h2>
     <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Directly control lighting for each section</p>
     
     <div class="card"><div class="card-body">
       <div class="card-title">🎛️ Section Light Management</div>
       <p style="font-size:12.5px;color:var(--gray400);margin-bottom:18px">Adjust brightness and status for each section independently</p>
-      <div class="pump-grid" id="pump-grid">
+      <div class="pump-grid" id="pump-grid"> -->
         <!-- filled by JS -->
+      <!-- </div>
+    </div></div> -->
+  <!-- </div>/ctrl-l -->
+
+  <div id="ctrl-l" style="display:none">
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:4px">LED Control</h2>
+    <p style="color:var(--gray500);margin-bottom:20px;font-size:14px">Manage the lighting system for each area</p>
+    
+    <div class="ctrl-layout">
+      <div class="ctrl-side">
+        <div class="ctrl-panel custom-dropdown">
+          <div class="cp-label">Selected Field</div>
+          <div class="field-sel" style="border-color:var(--y5);background:var(--y1)" onclick="toggleDropdown('led-menu')">
+            <div class="field-sel-row">
+              <span class="field-sel-name" id="sel-led" style="color:#a16207">Field 1</span>
+              <span style="font-size:14px; color:#a16207">▼</span>
+            </div>
+            <div class="field-sel-hint">Click to change field</div>
+          </div>
+          <div class="dropdown-menu" id="led-menu">
+            <div class="dropdown-item active" onclick="selectLed(1)">Field 1 <span>💡</span></div>
+            <div class="dropdown-item" onclick="selectLed(2)">Field 2 <span>💡</span></div>
+            <div class="dropdown-item" onclick="selectLed(3)">Field 3 <span>💡</span></div>
+          </div>
+        </div>
+
+        <div class="ctrl-panel">
+          <div class="cp-label">Operation Mode</div>
+          <div class="tog-wrap" style="flex-direction: row; gap: 8px;">
+            <button class="tog-btn act" id="mode-l-auto" style="flex:1" onclick="setMode('l', 'auto')">🤖 Auto</button>
+            <button class="tog-btn" id="mode-l-manual" style="flex:1" onclick="setMode('l', 'manual')">✋ Manual</button>
+          </div>
+        </div>
+
+        <div id="manual-panel-l" class="manual-panel disabled">
+          <div class="ctrl-panel" style="margin-top: 12px;">
+            <div class="cp-label">LED Power Override</div>
+            <div class="tog-wrap">
+              <button class="tog-btn" id="led-on-btn" onclick="setLedPower(true)">LED ON</button>
+              <button class="tog-btn" id="led-off-btn" onclick="setLedPower(false)">LED OFF</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div></div>
-  </div><!-- /ctrl-l -->
+
+      <div>
+        <div class="flow-wrap" style="border-color:var(--y1)">
+          <div class="flow-label-wrap">
+            <div class="flow-sub">Adjust Brightness (PWM)</div>
+            <div class="flow-val" id="led-pwm-lbl">0</div>
+          </div>
+          <input type="range" class="orange-range" min="0" max="100" value="0" id="led-range" oninput="document.getElementById('led-pwm-lbl').textContent = this.value" onchange="sendLedPwm(this.value)">
+          <div class="range-ends"><span>0 (Dark)</span><span>100 (Bright)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ---- TEMPERATURE ---- -->
   <div id="ctrl-t" style="display:none">
@@ -929,7 +974,7 @@ async function apiFetch(path, opt={}){
   const res = await fetch(API+path, {
     ...opt,
     headers:{'Content-Type':'application/json',...(opt.headers||{})},
-    signal: AbortSignal.timeout(5000)
+    signal: AbortSignal.timeout(50000)
   });
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
@@ -939,10 +984,10 @@ async function apiFetch(path, opt={}){
 async function sendCommand(cmd){
   try {
     await apiFetch('/command',{method:'POST',body:JSON.stringify({command:cmd})});
-    toast(`✅ Lệnh thành công: ${cmd}`,'ok');
+    toast(`✅ Command executed successfully: ${cmd}`,'ok');
     setTimeout(loadLogs,1000);
   } catch(e) {
-    toast(`❌ Lỗi gửi lệnh: ${e.message}`,'err');
+    toast(`❌ Command sending error: ${e.message}`,'err');
   }
 }
 
@@ -958,6 +1003,11 @@ async function loadLatest(){
     renderMonTable(d, d.sections||[]);
     updateHeader(d);
     setApiStatus(true);
+
+    syncUI('h', selH);
+    syncUI('t', selT);
+    syncUI('l', selL);
+
   } catch(e){
     setApiStatus(false);
   }
@@ -989,14 +1039,15 @@ async function loadLogs(){
 /* -------------------------------------------------------
    DATA LOADERS: THRESHOLDS (CHỈ GỬI - KHÔNG LẤY)
    ------------------------------------------------------- */
-function loadThresholds(){
-  // Không gọi apiFetch nữa, trực tiếp tạo ra 3 dòng để người dùng ĐẶT ngưỡng mới
-  const defaultData = [
-    { section_id: 1, temp_max: 30, soil_min: 40, soil_max: 60, light_min: 35, water_min: 2.0 },
-    { section_id: 2, temp_max: 30, soil_min: 40, soil_max: 60, light_min: 35, water_min: 2.0 },
-    { section_id: 3, temp_max: 30, soil_min: 40, soil_max: 60, light_min: 35, water_min: 2.0 }
-  ];
-  renderThresholds(defaultData);
+async function loadThresholds(){
+  try {
+    // Gọi API GET lấy dữ liệu thực từ Postgres
+    const data = await apiFetch('/thresholds');
+    renderThresholds(data);
+  } catch(e) {
+    console.error("Threshold loading error:", e);
+    document.getElementById('thresh-body').innerHTML = '<tr><td colspan="6" class="empty" style="color:var(--r5)">❌ Unable to load configuration data from the Server</td></tr>';
+  }
 }
 
 async function saveThresholds(){
@@ -1012,21 +1063,20 @@ async function saveThresholds(){
       // Ghép đúng với cấu trúc ThresholdUpdate trong api_server.py
       const body = {
           section_id: sid,
-          temp_max: parseFloat(inputs[0].value),   // Cột 1: Nhiệt độ (FAN)
-          soil_min: parseInt(inputs[1].value),     // Cột 2: Đất khô (PUMP)
-          // Bỏ qua inputs[2] (Đất ướt) vì backend của bạn đã tự tính: Wet = Dry + 20
-          light_min: parseInt(inputs[3].value),    // Cột 4: Ánh sáng (LED)
-          water_min: parseFloat(inputs[4].value)   // Cột 5: Mực nước (PUMP)
+          temp_max: parseFloat(inputs[0].value),   // Cột 1: Nhiệt độ
+          soil_min: parseInt(inputs[1].value),     // Cột 2: Đất khô
+          // inputs[2] là Đất Ướt đã bị disable (Backend tự động tính: Wet = Dry + 20)
+          light_min: parseInt(inputs[3].value),    // Cột 4: Ánh sáng
+          water_min: parseFloat(inputs[4].value)   // Cột 5: Mực nước
       };
       
-      // Gọi đúng API POST /api/thresholds của backend
       await apiFetch(`/thresholds`, { method: 'POST', body: JSON.stringify(body) });
       successCount++;
     }
     
-    if(successCount > 0) toast('✅ Đã gửi lệnh đặt ngưỡng tự động xuống hệ thống!', 'ok');
+    if(successCount > 0) toast('✅ Automatic threshold settings saved successfully!', 'ok');
   } catch(e){ 
-    toast('❌ Lỗi gửi cấu hình: ' + e.message, 'err'); 
+    toast('❌ Command sending error: ' + e.message, 'err'); 
   }
 }
 
@@ -1063,15 +1113,15 @@ function renderMetrics(d){
   document.getElementById('d-temp').textContent  = d.air_temp+'°C';
   document.getElementById('d-humid').textContent = d.air_humid+'%';
   document.getElementById('d-water').textContent = d.water_level+' cm';
-  document.getElementById('d-temp-sub').textContent  = d.air_temp>30?'⚠️ Nhiệt độ cao':'✅ Ổn định';
-  document.getElementById('d-humid-sub').textContent = d.air_humid<50?'⚠️ Độ ẩm thấp':'✅ Ổn định';
-  document.getElementById('d-water-sub').textContent = d.water_level<1?'🚫 Mực nước thấp':'✅ Đầy đủ';
+  document.getElementById('d-temp-sub').textContent  = d.air_temp>30?'⚠️ High Temperature':'✅ Stable';
+  document.getElementById('d-humid-sub').textContent = d.air_humid<50?'⚠️ Dry':'✅ Stable';
+  document.getElementById('d-water-sub').textContent = d.water_level<1?'🚫 Low Water Level':'✅ Full';
 }
 
 function renderSections(sections){
   const el = document.getElementById('sec-cards');
   if(!sections.length){
-    el.innerHTML='<div class="empty">Chưa có dữ liệu cảm biến</div>';
+    el.innerHTML='<div class="empty">No sensor data</div>';
     return;
   }
   el.innerHTML = sections.map(s=>{
@@ -1082,12 +1132,12 @@ function renderSections(sections){
       <div class="sec-head">
         <div class="sec-title">🪴 Section ${s.section_id}</div>
         <span class="pump-badge ${s.pump_status?'pump-on':'pump-off'}">
-          ${s.pump_status?'🟢 Bơm ON':'🔴 Bơm OFF'}
+          ${s.pump_status?'🟢 Pump ON':'🔴 Pump OFF'}
         </span>
       </div>
-      <div class="sec-row"><span class="sec-lbl">💧 Đất</span><span class="sec-val">${s.soil_percent}%</span></div>
+      <div class="sec-row"><span class="sec-lbl">💧 Soil</span><span class="sec-val">${s.soil_percent}%</span></div>
       <div class="bar-bg"><div class="bar-fill" style="width:${s.soil_percent}%;background:${soilColor}"></div></div>
-      <div class="sec-row"><span class="sec-lbl">☀️ Sáng</span><span class="sec-val">${s.light_percent}%</span></div>
+      <div class="sec-row"><span class="sec-lbl">☀️ Light</span><span class="sec-val">${s.light_percent}%</span></div>
       <div class="bar-bg"><div class="bar-fill" style="width:${s.light_percent}%;background:${lightColor}"></div></div>
       <div class="sec-row"><span class="sec-lbl">💡 LED PWM</span><span class="sec-val">${s.led_pwm}</span></div>
       <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(s.led_pwm/255*100)}%;background:var(--y5)"></div></div>
@@ -1104,7 +1154,7 @@ const alertMeta = {
 
 function renderAlerts(alerts){
   const el = document.getElementById('alerts-list');
-  if(!alerts.length){ el.innerHTML='<div class="empty">Hệ thống an toàn</div>'; return; }
+  if(!alerts.length){ el.innerHTML='<div class="empty">No alerts</div>'; return; }
   el.innerHTML = alerts.map(a=>{
     const m = alertMeta[a.alert_type]||{badge:'ab-moisture',icon:'ℹ️',label:a.alert_type};
     return `
@@ -1124,12 +1174,12 @@ function renderAlerts(alerts){
 
 function renderLogs(logs){
   const el = document.getElementById('log-list');
-  if(!logs.length){ el.innerHTML='<div class="empty">Chưa có lịch sử lệnh</div>'; return; }
+  if(!logs.length){ el.innerHTML='<div class="empty">No command history available</div>'; return; }
   el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
     <thead><tr style="background:var(--gray50)">
-      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Thời gian</th>
-      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Thiết bị</th>
-      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Hành động</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Time</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Device</th>
+      <th style="text-align:left;padding:8px 10px;color:var(--gray500);border-bottom:1px solid var(--gray200)">Action</th>
     </tr></thead>
     <tbody>${logs.map(l=>`
       <tr style="border-bottom:1px solid var(--gray50)">
@@ -1148,20 +1198,20 @@ function renderMonTable(d, sections){
   el.innerHTML = `
   <table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--gray50)">
-      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Thông số</th>
-      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Giá trị</th>
-      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Trạng thái</th>
+      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Status</th>
+      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Value</th>
+      <th style="text-align:left;padding:10px 14px;border-bottom:1px solid var(--gray200)">Condition</th>
     </tr></thead>
     <tbody>
       <tr style="border-bottom:1px solid var(--gray50)">
-        <td style="padding:11px 14px;font-weight:600">🌡️ Nhiệt độ</td>
+        <td style="padding:11px 14px;font-weight:600">🌡️ Temperature</td>
         <td style="padding:11px 14px">${d.air_temp}°C</td>
-        <td style="padding:11px 14px">${d.air_temp>30?warn('Cao'):ok()}</td>
+        <td style="padding:11px 14px">${d.air_temp>30?warn('High'):ok()}</td>
       </tr>
       <tr style="border-bottom:1px solid var(--gray50)">
-        <td style="padding:11px 14px;font-weight:600">💧 Độ ẩm</td>
+        <td style="padding:11px 14px;font-weight:600">💧 Humidity</td>
         <td style="padding:11px 14px">${d.air_humid}%</td>
-        <td style="padding:11px 14px">${d.air_humid<50?warn('Thấp'):ok()}</td>
+        <td style="padding:11px 14px">${d.air_humid<50?warn('Low'):ok()}</td>
       </tr>
     </tbody>
   </table>`;
@@ -1172,22 +1222,35 @@ function renderMonTable(d, sections){
 function renderThresholds(data){
   const el = document.getElementById('thresh-body');
   
-  el.innerHTML = data.map(r=>`
+  el.innerHTML = data.map(r=>{
+    // Tính toán Wet Soil (Đất ướt) hiển thị phía UI: Tối đa là 100%
+    const wetCalc = (r.soil_min + 20) > 100 ? 100 : (r.soil_min + 20);
+    
+    return `
     <tr data-sid="${r.section_id}">
       <td style="padding:10px 12px;font-weight:600">Section ${r.section_id}</td>
       <td style="padding:10px 12px"><input type="number" value="${r.temp_max}" step="0.5" min="15" max="50"></td>
-      <td style="padding:10px 12px"><input type="number" value="${r.soil_min}" step="1" min="0" max="100"></td>
-      <td style="padding:10px 12px"><input type="number" value="${r.soil_max}" step="1" min="0" max="100" title="Sẽ được tự động đồng bộ (Khô + 20%)"></td>
+      <td style="padding:10px 12px"><input type="number" class="dry-input" value="${r.soil_min}" step="1" min="0" max="100" oninput="updateWetSoilUI(this)"></td>
+      <td style="padding:10px 12px"><input type="number" class="wet-input" value="${wetCalc}" disabled style="background:var(--gray100);color:var(--gray400);cursor:not-allowed;border-color:transparent" title="The system automatically calculates: Wet soil = Dry soil + 20%"></td>
       <td style="padding:10px 12px"><input type="number" value="${r.light_min}" step="1" min="0" max="100"></td>
       <td style="padding:10px 12px"><input type="number" value="${r.water_min}" step="0.5" min="0" max="10"></td>
     </tr>
-  `).join('');
+  `}).join('');
+}
+
+function updateWetSoilUI(dryInput) {
+    const row = dryInput.closest('tr');
+    const wetInput = row.querySelector('.wet-input');
+    let dryVal = parseInt(dryInput.value) || 0;
+    let wetVal = dryVal + 20;
+    if (wetVal > 100) wetVal = 100;
+    wetInput.value = wetVal;
 }
 
 function renderFieldsOverview(){
   const grid = document.getElementById('fields-overview-grid');
   if(!state.latest || !state.latest.sections) {
-    grid.innerHTML = '<div class="empty">Chưa có dữ liệu</div>'; return;
+    grid.innerHTML = '<div class="empty">No data available</div>'; return;
   }
   
   const sections = state.latest.sections;
@@ -1196,15 +1259,15 @@ function renderFieldsOverview(){
     <div class="field-col">
       <div class="field-hdr">
         <span class="field-name">Section ${s.section_id}</span>
-        <span class="field-status status-active">Hoạt động</span>
+        <span class="field-status status-active">Active</span>
       </div>
       <div class="field-body">
         <div class="field-info-row">
-          <span class="fi-lbl">🚿 Trạng thái Bơm</span>
-          <span class="fi-val" style="color:${s.pump_status ? 'var(--g6)' : 'var(--r5)'}">${s.pump_status ? 'ĐANG BẬT' : 'ĐÃ TẮT'}</span>
+          <span class="fi-lbl">🚿 Pump Status</span>
+          <span class="fi-val" style="color:${s.pump_status ? 'var(--g6)' : 'var(--r5)'}">${s.pump_status ? 'ON' : 'OFF'}</span>
         </div>
         <div class="field-info-row">
-          <span class="fi-lbl">💡 Độ sáng LED</span>
+          <span class="fi-lbl">💡 LED Brightness</span>
           <span class="fi-val">${s.led_pwm} / 255</span>
         </div>
       </div>
@@ -1324,7 +1387,14 @@ function drawStaticCharts() {
 /* -------------------------------------------------------
    FIELD CONTROL INTERACTIONS
    ------------------------------------------------------- */
-let selField = 1, selZone = 1;
+let selH = 1, selT = 1, selL = 1; // Lưu Field đang chọn cho Pump(h), Fan(t), LED(l)
+
+// Quản lý trạng thái Auto/Manual ảo trên UI
+let deviceModes = {
+  1: { h: 'auto', t: 'auto', l: 'auto' },
+  2: { h: 'auto', t: 'auto', l: 'auto' },
+  3: { h: 'auto', t: 'auto', l: 'auto' }
+};
 
 function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
 window.onclick = function(event) {
@@ -1333,54 +1403,166 @@ window.onclick = function(event) {
   }
 }
 
-function selectField(id) {
-  selField = id; document.getElementById('sel-field').textContent = 'Field ' + id;
+// function selectField(id) {
+//   selField = id; document.getElementById('sel-field').textContent = 'Field ' + id;
+//   document.querySelectorAll('#field-menu .dropdown-item').forEach((item, idx) => item.classList.toggle('active', idx === id - 1));
+//   document.getElementById('field-menu').classList.remove('show');
+// }
+
+// function selectZone(id) {
+//   selZone = id; document.getElementById('sel-zone').textContent = 'Zone ' + id;
+//   document.querySelectorAll('#zone-menu .dropdown-item').forEach((item, idx) => item.classList.toggle('active', idx === id - 1));
+//   document.getElementById('zone-menu').classList.remove('show');
+// }
+
+// // Đã fix lỗi chuyển đổi nút Manual / Auto cho mượt mà
+// function setMode(tab, mode) {
+//   const btnAuto = document.getElementById(`mode-${tab}-auto`);
+//   const btnManual = document.getElementById(`mode-${tab}-manual`);
+//   const manualPanel = document.getElementById(`manual-panel-${tab}`);
+
+//   if(btnAuto) btnAuto.className = 'tog-btn' + (mode === 'auto' ? ' act' : '');
+//   if(btnManual) btnManual.className = 'tog-btn' + (mode === 'manual' ? ' act' : '');
+
+//   if(manualPanel) {
+//     if(mode === 'auto') {
+//       manualPanel.classList.add('disabled');
+//       toast('🤖 Chuyển sang chế độ Tự Động (Auto)', 'ok');
+//       if(tab === 'h') sendCommand(`PUMP_${selField}_AUTO`);
+//       if(tab === 't') sendCommand(`FAN_${selZone}_AUTO`);
+//     } else {
+//       manualPanel.classList.remove('disabled');
+//       toast('✋ Chuyển sang chế độ Thủ Công (Manual)', 'ok');
+//     }
+//   }
+// }
+
+// function setPump(active){
+//   const a = document.getElementById('tog-active');
+//   const i = document.getElementById('tog-inactive');
+//   if(a) a.className = 'tog-btn' + (active ? ' act' : '');
+//   if(i) i.className = 'tog-btn' + (active ? '' : ' act');
+//   sendCommand(active ? `PUMP_${selField}_ON` : `PUMP_${selField}_OFF`);
+// }
+
+// function setClimate(mode){
+//   ['heat','cool'].forEach(m=>{
+//     const el = document.getElementById('cm-'+m);
+//     if(el) el.className = 'tog-btn' + (m === mode ? ' act' : '');
+//   });
+//   sendCommand(mode === 'heat' ? `FAN_${selZone}_ON` : `FAN_${selZone}_OFF`);
+// }
+
+// 1. CHỌN KHU VỰC
+function selectField(id) { // Dành cho Pump
+  selH = id; document.getElementById('sel-field').textContent = 'Field ' + id;
   document.querySelectorAll('#field-menu .dropdown-item').forEach((item, idx) => item.classList.toggle('active', idx === id - 1));
   document.getElementById('field-menu').classList.remove('show');
+  syncUI('h', id); // Đồng bộ UI ngay khi đổi
 }
 
-function selectZone(id) {
-  selZone = id; document.getElementById('sel-zone').textContent = 'Zone ' + id;
+function selectZone(id) { // Dành cho Fan
+  selT = id; document.getElementById('sel-zone').textContent = 'Zone ' + id;
   document.querySelectorAll('#zone-menu .dropdown-item').forEach((item, idx) => item.classList.toggle('active', idx === id - 1));
   document.getElementById('zone-menu').classList.remove('show');
+  syncUI('t', id); // Đồng bộ UI ngay khi đổi
 }
 
-// Đã fix lỗi chuyển đổi nút Manual / Auto cho mượt mà
-function setMode(tab, mode) {
+function selectLed(id) { // Dành cho LED
+  selL = id; document.getElementById('sel-led').textContent = 'Field ' + id;
+  document.querySelectorAll('#led-menu .dropdown-item').forEach((item, idx) => item.classList.toggle('active', idx === id - 1));
+  document.getElementById('led-menu').classList.remove('show');
+  syncUI('l', id); // Đồng bộ UI ngay khi đổi
+}
+
+// 2. HÀM ĐỒNG BỘ TRẠNG THÁI TỪ API LÊN GIAO DIỆN
+function syncUI(tab, fieldId) {
+  // A. Phục hồi trạng thái Auto/Manual từ bộ nhớ tạm
+  let currentMode = deviceModes[fieldId][tab];
   const btnAuto = document.getElementById(`mode-${tab}-auto`);
   const btnManual = document.getElementById(`mode-${tab}-manual`);
   const manualPanel = document.getElementById(`manual-panel-${tab}`);
 
-  if(btnAuto) btnAuto.className = 'tog-btn' + (mode === 'auto' ? ' act' : '');
-  if(btnManual) btnManual.className = 'tog-btn' + (mode === 'manual' ? ' act' : '');
-
+  if(btnAuto) btnAuto.className = 'tog-btn' + (currentMode === 'auto' ? ' act' : '');
+  if(btnManual) btnManual.className = 'tog-btn' + (currentMode === 'manual' ? ' act' : '');
   if(manualPanel) {
-    if(mode === 'auto') {
-      manualPanel.classList.add('disabled');
-      toast('🤖 Chuyển sang chế độ Tự Động (Auto)', 'ok');
-      if(tab === 'h') sendCommand(`PUMP_${selField}_AUTO`);
-      if(tab === 't') sendCommand(`FAN_${selZone}_AUTO`);
-    } else {
-      manualPanel.classList.remove('disabled');
-      toast('✋ Chuyển sang chế độ Thủ Công (Manual)', 'ok');
-    }
+    if(currentMode === 'auto') manualPanel.classList.add('disabled');
+    else manualPanel.classList.remove('disabled');
+  }
+
+  // B. Phục hồi trạng thái Thiết Bị (ON/OFF/PWM) từ state.latest
+  if(!state.latest || !state.latest.sections) return;
+  let secData = state.latest.sections.find(s => s.section_id === fieldId);
+  if(!secData) return;
+
+  if (tab === 'h') { // Pump
+    const a = document.getElementById('tog-active');
+    const i = document.getElementById('tog-inactive');
+    if(a) a.className = 'tog-btn' + (secData.pump_status ? ' act' : '');
+    if(i) i.className = 'tog-btn' + (!secData.pump_status ? ' act' : '');
+  } 
+  else if (tab === 't') { // Fan
+    const heat = document.getElementById('cm-heat');
+    const cool = document.getElementById('cm-cool');
+    if(heat) heat.className = 'tog-btn' + (secData.fan_status ? ' act' : '');
+    if(cool) cool.className = 'tog-btn' + (!secData.fan_status ? ' act' : '');
+  } 
+  else if (tab === 'l') { // LED
+    const onBtn = document.getElementById('led-on-btn');
+    const offBtn = document.getElementById('led-off-btn');
+    let isLedOn = secData.led_pwm > 0;
+    
+    if(onBtn) onBtn.className = 'tog-btn' + (isLedOn ? ' act' : '');
+    if(offBtn) offBtn.className = 'tog-btn' + (!isLedOn ? ' act' : '');
+    
+    document.getElementById('led-range').value = secData.led_pwm;
+    document.getElementById('led-pwm-lbl').textContent = secData.led_pwm;
   }
 }
 
+// 3. ĐỔI CHẾ ĐỘ AUTO/MANUAL
+function setMode(tab, mode) {
+  let fieldId = tab === 'h' ? selH : (tab === 't' ? selT : selL);
+  deviceModes[fieldId][tab] = mode; // Lưu cục bộ
+  syncUI(tab, fieldId); // Gọi lại sync để vẽ UI
+  
+  if (mode === 'auto') {
+    toast('🤖 Switch to Automatic Mode (Auto)', 'ok');
+    if(tab === 'h') sendCommand(`PUMP_${fieldId}_AUTO`);
+    if(tab === 't') sendCommand(`FAN_${fieldId}_AUTO`);
+    if(tab === 'l') sendCommand(`LED_${fieldId}_AUTO`);
+  } else {
+    toast('✋ Switch to Manual Mode (Manual)', 'ok');
+  }
+}
+
+// 4. RA LỆNH ĐIỀU KHIỂN
 function setPump(active){
-  const a = document.getElementById('tog-active');
-  const i = document.getElementById('tog-inactive');
-  if(a) a.className = 'tog-btn' + (active ? ' act' : '');
-  if(i) i.className = 'tog-btn' + (active ? '' : ' act');
-  sendCommand(active ? `PUMP_${selField}_ON` : `PUMP_${selField}_OFF`);
+  sendCommand(active ? `PUMP_${selH}_ON` : `PUMP_${selH}_OFF`);
+  // Tính năng UX: Tự đổi màu nút tạm thời để có cảm giác phản hồi nhanh, sau đó hàm syncUI sẽ đè lại bằng dữ liệu thật.
+  document.getElementById('tog-active').className = 'tog-btn' + (active ? ' act' : '');
+  document.getElementById('tog-inactive').className = 'tog-btn' + (!active ? ' act' : '');
 }
 
 function setClimate(mode){
-  ['heat','cool'].forEach(m=>{
-    const el = document.getElementById('cm-'+m);
-    if(el) el.className = 'tog-btn' + (m === mode ? ' act' : '');
-  });
-  sendCommand(mode === 'heat' ? `FAN_${selZone}_ON` : `FAN_${selZone}_OFF`);
+  let isFanOn = (mode === 'heat');
+  sendCommand(isFanOn ? `FAN_${selT}_ON` : `FAN_${selT}_OFF`);
+  document.getElementById('cm-heat').className = 'tog-btn' + (isFanOn ? ' act' : '');
+  document.getElementById('cm-cool').className = 'tog-btn' + (!isFanOn ? ' act' : '');
+}
+
+function setLedPower(isOn) {
+  sendCommand(isOn ? `LED_${selL}_ON` : `LED_${selL}_OFF`);
+  document.getElementById('led-on-btn').className = 'tog-btn' + (isOn ? ' act' : '');
+  document.getElementById('led-off-btn').className = 'tog-btn' + (!isOn ? ' act' : '');
+  if(!isOn) {
+    document.getElementById('led-range').value = 0;
+    document.getElementById('led-pwm-lbl').textContent = '0';
+  }
+}
+
+function sendLedPwm(v) {
+  sendCommand(`LED_${selL}_SET_${v}`);
 }
 
 // Thêm logic Resize Chart chống lỗi tàng hình biểu đồ
@@ -1409,12 +1591,6 @@ function setCtab(tab){
     if(tab === 'h' && charts['ch-flow']) charts['ch-flow'].resize();
     if(tab === 't' && charts['ch-tempdist']) charts['ch-tempdist'].resize();
   }, 50);
-}
-
-function onFlowChange(v){
-  document.getElementById('flow-lbl').textContent=`Level ${v} / 10`;
-  const p=(v-1)/9*100;
-  document.getElementById('flow-range').style.background= `linear-gradient(to right,#3b82f6 0%,#3b82f6 ${p}%,#e5e7eb ${p}%,#e5e7eb 100%)`;
 }
 
 function onTempChange(v){
@@ -1467,8 +1643,8 @@ async function refreshAll(){
 }
 
 async function init(){
-  buildPumpGrid();
-  onFlowChange(6);
+  //buildPumpGrid();
+  //onFlowChange(6);
   onTempChange(26);
   drawStaticCharts();
   

@@ -203,6 +203,20 @@ async def update_thresholds(req: ThresholdUpdate):
     except Exception as e:
         print(f"❌ Lỗi cập nhật Threshold: {e}")
         raise HTTPException(status_code=500, detail=f"Không thể lưu ngưỡng: {str(e)}")
+    
+@app.get("/api/thresholds")
+async def get_thresholds():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT section_id, temp_max, soil_min, light_min, water_min FROM thresholds ORDER BY section_id ASC")
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        print(f"❌ Lỗi truy xuất Threshold: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi lấy ngưỡng: {str(e)}")
 
 # =====================================================================
 # 4. TÍCH HỢP BIỂU ĐỒ & LOGS TỪ FILE (1)
